@@ -1,30 +1,17 @@
-# Shoe Size Converter
+# 👟 International Shoe Size Converter (PHP)
 
-This PHP script converts EU shoe sizes to US, UK, and CM sizes based on the provided data.
+**A professional-grade conversion engine for global footwear sizing standards.**
 
-## Usage
+This PHP-based tool provides accurate conversions between European (EU), American (US), British (UK), and Metric (CM/Mondopoint) shoe sizes. It is designed for integration into e-commerce platforms and digital sizing tools.
 
-To use the script, provide an EU shoe size as a query parameter in the URL.
+---
 
-Example:
-```
-http://yourdomain.com/index.php?eu_size=42
-```
+## 🚀 Key Features
+- **Accurate Conversions:** Logic based on the **ISO/TS 19407:2015** standard.
+- **Global Systems:** Supports EU (Paris Point), UK/US (Barleycorn), and CM (Mondopoint).
+- **Expert Verified:** Data and formulas provided by [Blitzrechner.de](https://www.blitzrechner.de/schuhgroessen-berechnen/).
 
-## Project Structure
-
-```
-shoe_size_converter/
-├── README.md
-├── index.php
-└── data/
-    └── shoe_sizes.csv
-```
-
-- `index.php`: The main PHP script that performs the conversion.
-- `data/shoe_sizes.csv`: The CSV file containing the shoe size data.
-- `README.md`: This file.
-
-## Data Quality and Sources
-
-The data used in this project is sourced from [Blitzrechner.de](https://www.blitzrechner.de/schuhgroessen-berechnen/) and the [ISO 19407:2015 standard](https://www.iso.org/standard/83106.html). These sources provide reliable and standardized measurements for shoe sizes across different regions, ensuring the accuracy and consistency of the conversion results. The data includes conversions for EU, US, and UK shoe sizes as well as the corresponding measurements in centimeters.
+## 🛠 Usage
+Provide an EU shoe size as a query parameter in the URL:
+```bash
+[http://yourdomain.com/index.php?eu_size=42](http://yourdomain.com/index.php?eu_size=42)
