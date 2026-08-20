@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Shoes;
 
+use PDO;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +27,7 @@ CSV;
         $data = tmpfile();
         fwrite($data, $csv);
 
-        return Converter::fromPath($data);
+        return Converter::fromCsv($data);
     }
 
     public function testInCmReturnsValueWhenAlreadyInCm(): void
@@ -134,7 +135,7 @@ CSV;
 
         self::assertEquals(
             Unit::Cm->size(24.5),
-            $converter->convert(Unit::Eu->size(39), Unit::Cm)
+            $converter->inUnit(Unit::Eu->size(39), Unit::Cm)
         );
     }
 
@@ -144,7 +145,7 @@ CSV;
 
         $size = Unit::Cm->size(24.5);
 
-        self::assertEquals($size, $converter->convert($size, Unit::Cm));
+        self::assertEquals($size, $converter->inUnit($size, Unit::Cm));
         self::assertSame('24.5 cm', $size->human());
     }
 
@@ -153,7 +154,57 @@ CSV;
         $converter = $this->converter();
 
         self::assertNull(
-            $converter->convert(Unit::Eu->size(999), Unit::Cm)
+            $converter->inUnit(Unit::Eu->size(999), Unit::Cm)
         );
+    }
+
+    public function test_loading_from_pdo(): void
+    {
+        $pdo = new PDO('sqlite::memory:');
+
+        $pdo->exec(<<<'SQL'
+        CREATE TABLE shoe_sizes (
+            EU INTEGER NOT NULL,
+            US REAL NOT NULL,
+            UK REAL NOT NULL,
+            CM REAL NOT NULL
+        )
+    SQL);
+
+        $pdo->exec(<<<'SQL'
+        INSERT INTO shoe_sizes (EU, US, UK, CM)
+        VALUES
+            (39, 6.5, 6, 24.6),
+            (40, 7.5, 7, 25.3)
+    SQL);
+
+        $shoes = Converter::fromPdo($pdo);
+
+        self::assertNotEmpty($shoes->equivalents(Unit::Eu->size(39)));
+    }
+
+    public function test_loading_from_pdo_with_limit(): void
+    {
+        $pdo = new PDO('sqlite::memory:');
+
+        $pdo->exec(<<<'SQL'
+        CREATE TABLE shoe_sizes (
+            EU INTEGER NOT NULL,
+            US REAL NOT NULL,
+            UK REAL NOT NULL,
+            CM REAL NOT NULL
+        )
+    SQL);
+
+        $pdo->exec(<<<'SQL'
+        INSERT INTO shoe_sizes (EU, US, UK, CM)
+        VALUES
+            (39, 6.5, 6, 24.6),
+            (40, 7.5, 7, 25.3)
+    SQL);
+
+        $shoes = Converter::fromPdo($pdo, limit: 1);
+
+        self::assertEmpty($shoes->equivalents(Unit::Eu->size(40)));
     }
 }
