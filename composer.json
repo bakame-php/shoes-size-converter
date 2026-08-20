@@ -1,6 +1,6 @@
 {
-    "name": "bakame/shoes-size-converter",
-    "description": "shoes-size-converter library for PHP",
+    "name": "bakame/shoe-size-converter",
+    "description": "shoesize converter library for PHP",
     "keywords": ["ISO", "shoes size", "converter"],
     "license": "MIT",
     "authors": [

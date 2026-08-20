@@ -7,13 +7,11 @@ Converting shoes size is difficult, too difficult!!
 
 ![Too many standards](https://imgs.xkcd.com/comics/standards.png)
 
-So I found [schuhgroessen-umrechner](https://github.com/sarah-schuh/schuhgroessen-umrechner))
-and based on its amazing work I wrote this little library.
+So I found [schuhgroessen-umrechner](https://github.com/sarah-schuh/schuhgroessen-umrechner) and, inspired by Sarah's excellent work, built this small library around it.
 
-All functionalities where already present in the base repository I just
-restructured it to make it available as a standalone library.
+The original repository already contained all the core functionality. I mainly restructured and packaged it as a standalone library with a reusable API.
 
-So all credits should go to [Sarah Amft](https://github.com/sarah-schuh)
+All credit for the original work goes to [Sarah Amft](https://github.com/sarah-schuh).
 
 ## System Requirements
 
@@ -24,7 +22,7 @@ So all credits should go to [Sarah Amft](https://github.com/sarah-schuh)
 **Shoes size converter** is available on [Packagist](https://packagist.org/packages/bakame/shoes-size-converter) and can be installed using [Composer](https://getcomposer.org/):
 
 ~~~
-composer require bakame/shoes-size-converter
+composer require bakame/shoe-size-converter
 ~~~
 
 ## Usage
@@ -36,13 +34,13 @@ use Bakame\Shoes\Converter;
 
 $path = __DIR__ . '/data/shoe_sizes.csv';
 $converter = Converter::fromPath($path);
-$ueShoeSize = Unit::Eu->size(39);
-$ueShoeSize->value;
+$euShoeSize = Unit::Eu->size(39);
+$euShoeSize->value;
 // returs 39
-$ueShoeSize->unit;
+$euShoeSize->unit;
 // returs Unit::Eu
 
-$ukShoeSize = $converter->convert($ueShoeSize, Unit::Uk);
+$ukShoeSize = $converter->inUnit($euShoeSize, Unit::Uk);
 $ukShoeSize->value; 
 // returns 6; 
 
@@ -51,7 +49,7 @@ $ukShoeSize->unit
 
 $converter->availableSizes(Unit::Eu); 
 // returns all available shoes sizes in EU 
-// as an iterator of ShoesSize instance
+// as an iterator of ShoeSize instance
 
 $converter->inCm(Unit::Uk->size(12));
 // returns 29.6
@@ -63,9 +61,21 @@ $converter->inInch(Unit::Uk->size(12));
 // it is up to the user to format
 // the output with number_format for instance
 
-$result = $converter->equivalents($ueShoeSize);
+$result = $converter->equivalents($euShoeSize);
 // to list all shoesizes in all supported format
 ```
+
+## Examples
+
+Sara's original script is preserved in the `examples` directory and has been
+adapted to work as an API endpoint that returns JSON responses only. See
+[index.php](examples/index.php).
+
+## Database
+
+The package continues to rely on a CSV file, which can be updated, replaced,
+or cached by the application as needed. Managing the CSV file and providing
+database or other storage backends are outside the scope of this package.
 
 ## Contributing
 

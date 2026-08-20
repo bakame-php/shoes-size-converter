@@ -77,11 +77,15 @@ final readonly class Converter
 
     public function inCm(ShoeSize $size): int|float|null
     {
-        return Unit::Cm === $size->unit ? $size->value : $this->convert($size, Unit::Cm)?->value;
+        return Unit::Cm === $size->unit ? $size->value : $this->inUnit($size, Unit::Cm)?->value;
     }
 
-    public function convert(ShoeSize $size, Unit $to): ?ShoeSize
+    public function inUnit(ShoeSize $size, Unit $to): ?ShoeSize
     {
+        if ($to === $size->unit) {
+            return $size;
+        }
+
         foreach ($this->equivalents($size) as $shoeSize) {
             if ($to === $shoeSize->unit) {
                 return $shoeSize;

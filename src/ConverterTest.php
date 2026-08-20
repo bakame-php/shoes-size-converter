@@ -134,7 +134,7 @@ CSV;
 
         self::assertEquals(
             Unit::Cm->size(24.5),
-            $converter->convert(Unit::Eu->size(39), Unit::Cm)
+            $converter->inUnit(Unit::Eu->size(39), Unit::Cm)
         );
     }
 
@@ -144,7 +144,7 @@ CSV;
 
         $size = Unit::Cm->size(24.5);
 
-        self::assertEquals($size, $converter->convert($size, Unit::Cm));
+        self::assertEquals($size, $converter->inUnit($size, Unit::Cm));
         self::assertSame('24.5 cm', $size->human());
     }
 
@@ -153,7 +153,7 @@ CSV;
         $converter = $this->converter();
 
         self::assertNull(
-            $converter->convert(Unit::Eu->size(999), Unit::Cm)
+            $converter->inUnit(Unit::Eu->size(999), Unit::Cm)
         );
     }
 }
