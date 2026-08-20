@@ -38,7 +38,7 @@
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan": "^2.2",
-        "phpunit/phpunit": "^13.3",
+        "phpunit/phpunit": "^11.5.56 || ^12.5.33 || ^13.3",
         "phpstan/phpstan-deprecation-rules": "^2.0",
         "friendsofphp/php-cs-fixer": "^3.95"
     },
