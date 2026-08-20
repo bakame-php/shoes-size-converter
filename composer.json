@@ -34,7 +34,7 @@
         "league/csv": "^9.28"
     },
     "require-dev": {
-        "symfony/var-dumper": "^8.1",
+        "symfony/var-dumper": "^7.4 || ^8.1",
         "phpstan/phpstan-strict-rules": "^2.0",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan": "^2.2",
