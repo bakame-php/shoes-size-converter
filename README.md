@@ -35,32 +35,34 @@ $converter = Converter::fromCsv($path);
 $euShoeSize = Unit::Eu->size(39);
 $euShoeSize->value;
 // returs 39
+
 $euShoeSize->unit;
 // returs Unit::Eu
 
 $ukShoeSize = $converter->inUnit($euShoeSize, Unit::Uk);
-$ukShoeSize->value; 
-// returns 6; 
+$ukShoeSize->value;
+// returns 6;
 
-$ukShoeSize->unit
+$ukShoeSize->unit;
 // returs Unit::Uk
 
-$converter->availableSizes(Unit::Eu); 
-// returns all available shoes sizes in EU 
-// as an iterator of ShoeSize instance
-
-$converter->inCm(Unit::Uk->size(12));
-// returns 29.6
+$converter->inCm($ukShoeSize);
+// returns 24.6
 // the shoe size in centimeters
 
-$converter->inInch(Unit::Uk->size(12));
-// returns 11.653543307087
+$converter->inInch($ukShoeSize);
+// returns 9.6850393700787
 // the shoe size in inches
 // it is up to the user to format
-// the output with number_format for instance
+// the output with PHP's `number_format()`
+// function for instance
 
 $result = $converter->equivalents($euShoeSize);
-// to list all shoesizes in all supported format
+// List all equivalent shoe-sizes in all supported unit
+
+$converter->availableSizes(Unit::Eu);
+// returns all available shoes sizes in EU
+// as an iterator of ShoeSize instances
 ```
 
 ## Examples
@@ -69,7 +71,7 @@ The original script by Sarah Amft has been reimplemented using this library's AP
 in the `examples` directory. It exposes the conversion functionality as an HTTP
 API endpoint that returns JSON responses. See [converter.php](examples/converter.php).
 
-To run the converter, clone this repo, go to the root directory and start PHP's built-in
+To run the converter, **clone this repo**, go to the root directory and start PHP's built-in
 development server:
 
 ```bash
