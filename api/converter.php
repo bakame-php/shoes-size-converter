@@ -34,13 +34,8 @@ null !== $unit || $fail('Please provide a valid shoe-size unit (e.g., EU, US, UK
 
 $size = $_GET['size'] ?? '';
 (is_string($size) && '' !== trim($size)) || $fail('Please provide a shoe size.', 400);
-$size = filter_var(trim($size), Unit::Eu === $unit ? FILTER_VALIDATE_INT : FILTER_VALIDATE_FLOAT);
-false !== $size || $fail(
-    Unit::Eu === $unit
-        ? 'Please provide a valid EU shoe size (e.g., 38 or 42).'
-        : "Please provide a valid {$unit->value} shoe size.",
-    400
-);
+$size = filter_var(trim($size), FILTER_VALIDATE_FLOAT);
+false !== $size || $fail("Please provide a valid {$unit->value} shoe size.", 400);
 
 try {
     $converter = Converter::fromCsv($path);

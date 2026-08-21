@@ -12,7 +12,7 @@ use function strtolower;
 final readonly class ShoeSize implements JsonSerializable
 {
     public function __construct(
-        public int|float $value,
+        public float $value,
         public Unit $unit,
     ) {
         $value >= 0 || throw new ValueError('The shoe size value cannot be less than 1');

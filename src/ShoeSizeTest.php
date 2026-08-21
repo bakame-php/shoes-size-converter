@@ -20,7 +20,7 @@ final class ShoeSizeTest extends TestCase
         self::assertSame('{"value":24.5,"unit":"CM"}', json_encode($size));
     }
 
-    public function test_shoesize_instantiation(): void
+    public function test_shoe_size_instantiation_fails_with_negative_number(): void
     {
         $this->expectException(ValueError::class);
 

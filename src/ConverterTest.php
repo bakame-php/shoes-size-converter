@@ -164,7 +164,7 @@ CSV;
 
         $pdo->exec(<<<'SQL'
         CREATE TABLE shoe_sizes (
-            EU INTEGER NOT NULL,
+            EU REAL NOT NULL,
             US REAL NOT NULL,
             UK REAL NOT NULL,
             CM REAL NOT NULL
@@ -189,7 +189,7 @@ CSV;
 
         $pdo->exec(<<<'SQL'
         CREATE TABLE shoe_sizes (
-            EU INTEGER NOT NULL,
+            EU REAL NOT NULL,
             US REAL NOT NULL,
             UK REAL NOT NULL,
             CM REAL NOT NULL

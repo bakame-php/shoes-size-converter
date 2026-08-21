@@ -44,17 +44,8 @@ $unit = Unit::tryFrom(strtoupper($argv[1] ?? ''))
 
 $size = trim($argv[2] ?? '');
 $size !== '' || $fail('Please provide a shoe size.');
-
-$size = filter_var($size, $unit === Unit::Eu
-        ? FILTER_VALIDATE_INT
-        : FILTER_VALIDATE_FLOAT
-);
-
-$size !== false || $fail(
-    $unit === Unit::Eu
-        ? 'Please provide a valid EU shoe size (e.g., 38 or 42).'
-        : "Please provide a valid {$unit->value} shoe size."
-);
+$size = filter_var($size, FILTER_VALIDATE_FLOAT);
+$size !== false || $fail("Please provide a valid {$unit->value} shoe size (e.g., 38 or 42.5).");
 
 try {
     $converter = Converter::fromCsv(__DIR__ . '/../data/shoe_sizes.csv');

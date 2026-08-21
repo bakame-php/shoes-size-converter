@@ -17,7 +17,6 @@ use ValueError;
 use function array_map;
 use function implode;
 use function is_string;
-use function str_contains;
 use function trim;
 
 final readonly class Converter
@@ -57,14 +56,9 @@ final readonly class Converter
     public static function fromCsv($path): self
     {
         $trimmer = static fn (array $row) => array_map(
-            static function (mixed $value): int|float {
+            static function (mixed $value): float {
                 is_string($value) || throw new ShoeException('The data layer is corrupted.');
-
-                $v = trim($value);
-
-                return true === str_contains($v, '.')
-                    ? (float) $v
-                    : (int) $v;
+                return (float) trim($value);
             },
             $row
         );
@@ -95,7 +89,7 @@ final readonly class Converter
      *
      * ```sql
      * CREATE TABLE shoe_sizes (
-     *     EU INTEGER NOT NULL,
+     *     EU REAL NOT NULL,
      *     US REAL NOT NULL,
      *     UK REAL NOT NULL,
      *     CM REAL NOT NULL
@@ -135,7 +129,7 @@ final readonly class Converter
     public function availableSizes(Unit $for): iterable
     {
         try {
-            /** @var int|float $value */
+            /** @var float $value */
             foreach ($this->tabularData->fetchColumn($for->value) as $value) {
                 yield $for->size($value);
             }
@@ -151,7 +145,7 @@ final readonly class Converter
         return null === $cm ? null : ($cm / self::CM_TO_INCH);
     }
 
-    public function inCm(ShoeSize $size): int|float|null
+    public function inCm(ShoeSize $size): ?float
     {
         return Unit::Cm === $size->unit ? $size->value : $this->inUnit($size, Unit::Cm)?->value;
     }
