@@ -66,11 +66,14 @@ $converter->availableSizes(Unit::Eu);
 // as an iterator of ShoeSize instances
 ```
 
-## Examples
+## HTTP Endpoint
+
+> [!WARNING]
+>  **the HTTP endpoint is only available when the package has been cloned.**
 
 The original script by Sarah Amft has been reimplemented using this library's API
-in the `examples` directory. It exposes the conversion functionality as an HTTP
-API endpoint that returns JSON responses. See [converter.php](examples/converter.php).
+in the `api` directory. It exposes the conversion functionality as an HTTP
+API endpoint that returns JSON responses. See [converter.php](api/converter.php).
 
 To run the converter:
 
@@ -85,7 +88,7 @@ php -S localhost:4000
 Then open your browser or HTTP client and request:
 
 ```text
-http://localhost:4000/examples/converter.php?unit=EU&size=42
+http://localhost:4000/api/converter.php?unit=EU&size=42
 ```
 
 This returns:
@@ -94,10 +97,13 @@ This returns:
 {"sizes":[{"value":27.1,"unit":"CM"},{"value":42,"unit":"EU"},{"value":9.5,"unit":"US"},{"value":9,"unit":"UK"}],"measurements":{"centimeters":27.1,"inches":10.669291338582678}}
 ```
 
-The same script can also be used as a CLI command:
+## CLI command
+
+> [!TIP]
+>  **the CLI command is always available.**
 
 ```bash
-php examples/converter.php EU 42
+vendor/bin/shoe-converter EU 42
 ```
 
 This returns:

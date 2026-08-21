@@ -4,6 +4,8 @@ use PhpCsFixer\Runner\Parallel\ParallelConfigFactory;
 
 $finder = PhpCsFixer\Finder::create()
     ->in(__DIR__ . '/src')
+    ->in(__DIR__ . '/api')
+    ->in(__DIR__ . '/bin')
 ;
 
 $config = new PhpCsFixer\Config();

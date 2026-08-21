@@ -1,0 +1,83 @@
+#!/usr/bin/env php
+<?php
+
+use Bakame\Shoes\Converter;
+use Bakame\Shoes\Unit;
+
+$directory = __DIR__;
+
+while ($directory !== dirname($directory)) {
+    if (is_file($autoload = $directory . '/vendor/autoload.php')) {
+        require $autoload;
+        break;
+    }
+
+    $directory = dirname($directory);
+}
+
+if (!isset($autoload)) {
+    fwrite(STDERR, "\033[31mUnable to locate Composer autoloader.\033[0m\n");
+    exit(1);
+}
+
+$styles = [
+    'bold'   => "\033[1m",
+    'red'    => "\033[31m",
+    'yellow' => "\033[33m",
+    'cyan'   => "\033[36m",
+    'green'  => "\033[32m",
+    'reset'  => "\033[0m",
+];
+
+$fail = static function (string $message) use ($styles): never {
+    fwrite(
+        STDERR,
+        "{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']}\n"
+        . "{$styles['bold']}{$styles['red']}{$message}{$styles['reset']}\n"
+    );
+
+    exit(1);
+};
+
+$unit = Unit::tryFrom(strtoupper($argv[1] ?? ''))
+    ?? $fail('Please provide a valid shoe-size unit (e.g., EU, US, UK, or CM).');
+
+$size = trim($argv[2] ?? '');
+$size !== '' || $fail('Please provide a shoe size.');
+
+$size = filter_var($size, $unit === Unit::Eu
+        ? FILTER_VALIDATE_INT
+        : FILTER_VALIDATE_FLOAT
+);
+
+$size !== false || $fail(
+    $unit === Unit::Eu
+        ? 'Please provide a valid EU shoe size (e.g., 38 or 42).'
+        : "Please provide a valid {$unit->value} shoe size."
+);
+
+try {
+    $converter = Converter::fromCsv(__DIR__ . '/../data/shoe_sizes.csv');
+} catch (Throwable) {
+    $fail('Data source is missing or not readable.');
+}
+
+$inputSize = $unit->size($size);
+$result = $converter->equivalents($inputSize);
+
+$result !== [] || $fail("No matching shoe size found for {$inputSize->human()}");
+
+$cm = $result[Unit::Cm->value];
+fwrite(STDOUT, "{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']}\n");
+fwrite(STDOUT, "{$styles['bold']}Input{$styles['reset']}\n");
+fwrite(STDOUT, "  {$styles['bold']}{$styles['cyan']}{$inputSize->unit->value} {$inputSize->value}{$styles['reset']}\n");
+fwrite(STDOUT, "{$styles['bold']}Sizes{$styles['reset']}\n");
+
+foreach ($result as $size) {
+    fwrite(STDOUT, "  {$styles['green']}{$size->unit->value} {$size->value}{$styles['reset']}\n");
+}
+
+fwrite(STDOUT, "{$styles['bold']}Measurements{$styles['reset']}\n");
+fwrite(STDOUT, "  {$styles['green']}{$cm->value} cm{$styles['reset']}\n");
+fwrite(STDOUT, "  {$styles['green']}{$converter->inInch($cm)} in{$styles['reset']}\n");
+exit(0);

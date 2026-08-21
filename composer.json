@@ -9,19 +9,13 @@
             "email" : "nyamsprod@gmail.com",
             "homepage" : "https://github.com/nyamsprod/",
             "role" : "Developer"
-        },
-        {
-            "name" : "Sarah Amft",
-            "email" : "nyamsprod@gmail.com",
-            "homepage" : "https://github.com/sarah-schuh",
-            "role" : "Developer"
         }
     ],
     "support": {
-        "docs": "https://github.com/bakame-php/stackwatch",
-        "issues": "https://github.com/bakame-php/stackwatch/issues",
-        "rss": "https://github.com/bakame-php/stackwatch/releases.atom",
-        "source": "https://github.com/bakame-php/stackwatch"
+        "docs": "https://github.com/bakame-php/shoes-size-converter",
+        "issues": "https://github.com/bakame-php/shoes-size-converter/issues",
+        "rss": "https://github.com/bakame-php/shoes-size-converter/releases.atom",
+        "source": "https://github.com/bakame-php/shoes-size-converter"
     },
     "funding": [
         {
@@ -59,10 +53,16 @@
             "@phpcs"
         ]
     },
+    "bin": [
+        "bin/shoe-converter"
+    ],
     "scripts-descriptions": {
         "phpcs": "Runs coding style test suite",
         "phpstan": "Runs complete codebase static analysis",
         "phpunit": "Runs unit and functional testing",
         "test": "Runs full test suite"
+    },
+    "suggest": {
+        "ext-pdo": "Required to use the a databaseto store the data instead of CSV"
     }
 }
