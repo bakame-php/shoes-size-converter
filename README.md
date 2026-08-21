@@ -69,7 +69,7 @@ The original script by Sarah Amft has been reimplemented using this library's AP
 in the `examples` directory. It exposes the conversion functionality as an HTTP
 API endpoint that returns JSON responses. See [converter.php](examples/converter.php).
 
-To run the converter, go to the root directory and start PHP's built-in
+To run the converter, clone this repo, go to the root directory and start PHP's built-in
 development server:
 
 ```bash
