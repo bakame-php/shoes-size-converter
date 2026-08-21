@@ -21,8 +21,6 @@ use function trim;
 
 final readonly class Converter
 {
-    private const CM_TO_INCH = 2.54;
-
     public function __construct(private TabularData $tabularData)
     {
     }
@@ -32,10 +30,12 @@ final readonly class Converter
      *
      * The CSV file must have the following columns:
      *
-     * - `EU`: European shoe size
-     * - `US`: US shoe size
-     * - `UK`: UK shoe size
-     * - `CM`: Foot length in centimeters
+     * - `eu`: European shoe size
+     * - `us_men`: US men's shoe size
+     * - `us_women`: US women's shoe size
+     * - `uk`: UK shoe size
+     * - `cm`: Foot length in centimeters
+     * - `mondopoint`: Foot length in millimeters
      *
      * The first row is used as the column header. Values are trimmed and converted
      * to integers or floating-point numbers based on their representation.
@@ -43,17 +43,18 @@ final readonly class Converter
      * Example:
      *
      * ```csv
-     * EU,US,UK,CM
-     * 39,6.5,6,24.6
-     * 40,7.5,7,25.3
-     * 41,8,7.5,26
+     * mondopoint,cm,eu,uk,us_men,us_women
+     * 215,21.5,34,2.5,3.5,4.5
+     * 220,22.0,35,3,4,5
+     * 225,22.5,35.5,3.5,4.5,5.5
+     * 230,23.0,36.5,4,5,6
      * ```
      *
      * @param non-empty-string|resource|SplFileObject|SplFileInfo $path
      *
      * @throws ShoeException If the CSV data cannot be read or contains invalid data.
      */
-    public static function fromCsv($path): self
+    public static function fromCsv(mixed $path): self
     {
         $trimmer = static fn (array $row) => array_map(
             static function (mixed $value): float {
@@ -80,19 +81,23 @@ final readonly class Converter
      *
      * The table must have the following columns:
      *
-     * - `EU`: European shoe size
-     * - `US`: US shoe size
-     * - `UK`: UK shoe size
-     * - `CM`: Foot length in centimeters
+     * - `eu`: European shoe size
+     * - `us_men`: US men's shoe size
+     * - `us_women`: US women's shoe size
+     * - `uk`: UK shoe size
+     * - `cm`: Foot length in centimeters
+     * - `mondopoint`: Foot length in millimeters
      *
      * Example schema:
      *
      * ```sql
      * CREATE TABLE shoe_sizes (
-     *     EU REAL NOT NULL,
-     *     US REAL NOT NULL,
-     *     UK REAL NOT NULL,
-     *     CM REAL NOT NULL
+     *     eu REAL NOT NULL,
+     *     us_men REAL NOT NULL,
+     *     us_women REAL NOT NULL,
+     *     uk REAL NOT NULL,
+     *     cm REAL NOT NULL,
+     *     mondopoint REAL NOT NULL
      * );
      * ```
      *
@@ -138,18 +143,6 @@ final readonly class Converter
         }
     }
 
-    public function inInch(ShoeSize $size): ?float
-    {
-        $cm = $this->inCm($size);
-
-        return null === $cm ? null : ($cm / self::CM_TO_INCH);
-    }
-
-    public function inCm(ShoeSize $size): ?float
-    {
-        return Unit::Cm === $size->unit ? $size->value : $this->inUnit($size, Unit::Cm)?->value;
-    }
-
     public function inUnit(ShoeSize $size, Unit $to): ?ShoeSize
     {
         if ($to === $size->unit) {
@@ -166,6 +159,8 @@ final readonly class Converter
     }
 
     /**
+     * Returns the available equivalents for the given shoe size.
+     *
      * @return array<non-empty-string, ShoeSize>
      */
     public function equivalents(ShoeSize $size): array

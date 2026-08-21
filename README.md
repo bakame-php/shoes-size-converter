@@ -25,46 +25,120 @@ composer require bakame/shoe-size-converter
 
 ## Usage
 
+Create a shoe size using one of the supported units:
+
 ```php
-use Bakame\Shoes\Unit;
 use Bakame\Shoes\Converter;
+use Bakame\Shoes\Unit;
 
-$path = __DIR__ . '/data/shoe_sizes.csv';
-$converter = Converter::fromCsv($path);
-$euShoeSize = Unit::Eu->size(39);
-// $euShoeSize is an instance of Bakame\Shoes\ShoeSize class
+$euShoeSize = Unit::Eu->size(43);
+// $euShoeSize is an instance of Bakame\Shoes\ShoeSize
+```
 
+A `ShoeSize` exposes its numeric value and unit:
+
+```php
 $euShoeSize->value;
-// returs 39
+// 43
 
 $euShoeSize->unit;
-// returs Unit::Eu
+// Unit::Eu
+```
 
-$ukShoeSize = $converter->inUnit($euShoeSize, Unit::Uk);
+### Calculated conversions
+
+You can calculate an equivalent shoe size in any supported unit using the
+foot-length-based conversion formulas:
+
+```php
+$ukShoeSize = $euShoeSize->in(Unit::Uk);
+// returns a ShoeSize containing the calculated UK size
+
 $ukShoeSize->value;
-// returns 6;
+// 9.5
 
 $ukShoeSize->unit;
-// returs Unit::Uk
-
-$converter->inCm($ukShoeSize);
-// returns 24.6
-// the shoe size in centimeters
-
-$converter->inInch($ukShoeSize);
-// returns 9.6850393700787
-// the shoe size in inches
-// it is up to the user to format
-// the output with PHP's `number_format()`
-// function for instance
-
-$result = $converter->equivalents($euShoeSize);
-// List all equivalent shoe-sizes in all supported unit
-
-$converter->availableSizes(Unit::Eu);
-// returns all available shoes sizes in EU
-// as an iterator of ShoeSize instances
+// Unit::Uk
 ```
+
+The calculated value is the nearest size supported by the target sizing
+system. It is **not** a lookup in the ISO conversion table.
+
+You can also calculate all supported equivalents at once with
+`ShoeSize::equivalents()`:
+
+```php
+$result = $euShoeSize->equivalents();
+// returns an array containing the calculated equivalent shoe sizes
+// for all supported units
+```
+
+### Physical measurements
+
+A `ShoeSize` can also be represented as a physical foot measurement.
+Dedicated methods are available for millimeters, centimeters, and inches:
+
+```php
+$ukShoeSize->inMillimeters();
+// 275
+
+$ukShoeSize->inCentimeters();
+// 27.5
+
+$ukShoeSize->inInches();
+// 10.826771653543
+```
+
+These measurements are derived from the calculated foot length and are
+independent of the conversion lookup table.
+
+### ISO 19407:2023-based conversions
+
+If you require an exact equivalence from the provided conversion data rather
+than a calculated value, use `Converter`.
+
+For example, when using the CSV persistence layer:
+
+```php
+$path = __DIR__ . '/data/shoe_sizes.csv';
+
+$converter = Converter::fromCsv($path);
+```
+
+`Converter::availableSizes()` returns the sizes available for a specific
+unit:
+
+```php
+$converter->availableSizes(Unit::Eu);
+// returns an iterator of ShoeSize instances
+// containing all EU sizes available in the data source
+```
+
+You can retrieve all available equivalents for a shoe size using
+`Converter::equivalents()`:
+
+```php
+$result = $converter->equivalents($euShoeSize);
+// returns the equivalent shoe sizes found in the lookup data
+```
+
+Or retrieve the equivalent for a specific unit with `Converter::inUnit()`:
+
+```php
+$ukShoeSize = $converter->inUnit($euShoeSize, Unit::Uk);
+// returns the UK equivalent found in the lookup data
+```
+
+Unlike `ShoeSize::in()` and `ShoeSize::equivalents()`, these methods **do not
+calculate missing values**. They only return equivalences that are explicitly
+present in the configured persistence layer.
+
+For example, a size may have no exact equivalent in the lookup data even
+though a calculated equivalent can be produced.
+
+Please refer to the [Persistence Layer](#persistence-layer) section for
+information about the supported persistence layers and how to create and
+store the conversion data.
 
 ## HTTP Endpoint
 
@@ -88,13 +162,51 @@ php -S localhost:4000
 Then open your browser or HTTP client and request:
 
 ```text
-http://localhost:4000/api/converter.php?unit=EU&size=42
+http://localhost:4000/api/converter.php?unit=EU&size=42.5
 ```
 
 This returns:
 
 ```json
-{"sizes":[{"value":27.1,"unit":"CM"},{"value":42,"unit":"EU"},{"value":9.5,"unit":"US"},{"value":9,"unit":"UK"}],"measurements":{"centimeters":27.1,"inches":10.669291338582678}}
+{"source":"calculated", "sizes":[{"value":270,"unit":"mondopoint"},{"value":27,"unit":"cm"},{"value":42.5,"unit":"eu"},{"value":9,"unit":"uk"},{"value":10,"unit":"us_men"},{"value":11,"unit":"us_women"}],"measurements":{"centimeters":27,"inches":10.62992125984252}}
+```
+
+in pretty print it gives:
+
+```json
+{
+    "source": "calculated",
+    "sizes": [
+        {
+            "value": 270,
+            "unit": "mondopoint"
+        },
+        {
+            "value": 27,
+            "unit": "cm"
+        },
+        {
+            "value": 42.5,
+            "unit": "eu"
+        },
+        {
+            "value": 9,
+            "unit": "uk"
+        },
+        {
+            "value": 10,
+            "unit": "us_men"
+        },
+        {
+            "value": 11,
+            "unit": "us_women"
+        }
+    ],
+    "measurements": {
+        "centimeters": 27,
+        "inches": 10.6299212598425
+    }
+}
 ```
 
 ## CLI command
@@ -103,7 +215,7 @@ This returns:
 >  **the CLI command is always available.**
 
 ```bash
-vendor/bin/shoe-converter EU 42
+vendor/bin/shoe-converter EU 42.5
 ```
 
 This returns:
@@ -111,15 +223,17 @@ This returns:
 ```bash
 Shoe size conversion
 Input
-  EU 42
-Sizes
-  CM 27.1
-  EU 42
-  US 9.5
-  UK 9
+  eu 42.5
+Sizes (calculated)
+  mondopoint 270
+  cm 27
+  eu 42.5
+  uk 9
+  us_men 10
+  us_women 11
 Measurements
-  27.1 cm
-  10.669291338583 in
+  27 cm
+  10.629921259843 in
 ```
 
 ## Persistence Layer
@@ -131,9 +245,13 @@ Both sources must follow the expected shoe-size structure documented by the
 corresponding factory methods:
 
 - `fromCsv()` — loads data from a CSV file whose first row contains the
-  `EU`, `US`, `UK`, and `CM` column headers.
+  `eu`, `us_men`, `us_women`, `uk`, `cm` and `mondopoint` column headers.
 - `fromPdo()` — loads data from a `shoe_sizes` database table containing
-  the `EU`, `US`, `UK`, and `CM` columns.
+  the   `eu`, `us_men`, `us_women`, `uk`, `cm` and `mondopoint` columns.
+
+> [!IMPORTANT]
+> The conversion table in the `data` directory is provided in `CSV` and `SQLite`
+> formats and contains **adult shoe-size conversions based on ISO 19407:2023**.
 
 ## Attribution
 

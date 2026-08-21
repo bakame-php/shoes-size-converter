@@ -6,6 +6,7 @@
 // The script works with a SQLite Database backend
 
 use Bakame\Shoes\Converter;
+use Bakame\Shoes\ShoeSize;
 use Bakame\Shoes\Unit;
 
 require __DIR__.'/../vendor/autoload.php';
@@ -20,6 +21,7 @@ $fail = static function (string $message, int $status): never {
         'title' => match ($status) {
             400 => 'Bad Request',
             404 => 'Not Found',
+            422 => 'Unprocessable content',
             default => 'Internal Server Error',
         },
         'status' => $status,
@@ -29,12 +31,12 @@ $fail = static function (string $message, int $status): never {
     exit;
 };
 
-$unit = Unit::tryFrom(strtoupper((string) ($_GET['unit'] ?? '')));
+$unit = Unit::tryFrom(strtolower((string) ($_GET['unit'] ?? '')));
 null !== $unit || $fail('Please provide a valid shoe-size unit (e.g., EU, US, UK, or CM).', 400);
 
 $size = $_GET['size'] ?? '';
 (is_string($size) && '' !== trim($size)) || $fail('Please provide a shoe size.', 400);
-$size = filter_var(trim($size), FILTER_VALIDATE_FLOAT);
+$size = filter_var(trim($size), FILTER_VALIDATE_FLOAT, ['options' => ['min_range' => 0]]);
 false !== $size || $fail("Please provide a valid {$unit->value} shoe size.", 400);
 
 try {
@@ -43,16 +45,33 @@ try {
     $fail('Data source is missing or not readable.', 500);
 }
 
+$source = 'ISO 19407:2023-based';
 $inputSize = $unit->size($size);
-$result = $converter->equivalents($inputSize);
-[] !== $result || $fail('No matching shoe size found for '.$inputSize->unit->value.' '.$inputSize->value, 404);
+try {
+    $result = $converter->equivalents($inputSize);
+    if ([] === $result) {
+        $source = 'calculated';
+        $result = $inputSize->equivalents();
+    }
+
+    [] !== $result || $fail('No matching shoe size found for "'.$inputSize->human().'"', 404);
+} catch (ValueError) {
+    $fail('The input size "'.$inputSize->human().'" cannot be converted to another unit system.', 422);
+}
+
 $cm = $result[Unit::Cm->value];
+null !== $cm || $fail('Unable to determine the foot length for "'.$inputSize->human().'"', 422);
 
 header('Content-Type: application/json; charset=UTF-8');
 echo json_encode([
-    'sizes' => array_values($result),
+    'source' => $source,
     'measurements' => [
         'centimeters' => $cm->value,
-        'inches' => $converter->inInch($cm),
+        'inches' => $cm->inInches(),
     ],
+    'sizes' => array_values(array_map(
+        static fn (?ShoeSize $size, string $unit): array => ['value' => $size?->value, 'unit' => Unit::from($unit)],
+        $result,
+        array_keys($result),
+    )),
 ], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);

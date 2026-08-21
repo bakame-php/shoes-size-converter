@@ -39,12 +39,12 @@ $fail = static function (string $message) use ($styles): never {
     exit(1);
 };
 
-$unit = Unit::tryFrom(strtoupper($argv[1] ?? ''))
+$unit = Unit::tryFrom(strtolower($argv[1] ?? ''))
     ?? $fail('Please provide a valid shoe-size unit (e.g., EU, US, UK, or CM).');
 
 $size = trim($argv[2] ?? '');
 $size !== '' || $fail('Please provide a shoe size.');
-$size = filter_var($size, FILTER_VALIDATE_FLOAT);
+$size = filter_var($size, FILTER_VALIDATE_FLOAT, ['options' => ['min_range' => 0]]);
 $size !== false || $fail("Please provide a valid {$unit->value} shoe size (e.g., 38 or 42.5).");
 
 try {
@@ -53,22 +53,38 @@ try {
     $fail('Data source is missing or not readable.');
 }
 
+$source = 'ISO 19407:2023-based';
 $inputSize = $unit->size($size);
-$result = $converter->equivalents($inputSize);
+try {
+    $result = $converter->equivalents($inputSize);
+    if ([] === $result) {
+        $source = 'calculated';
+        $result = $inputSize->equivalents();
+    }
 
-$result !== [] || $fail("No matching shoe size found for {$inputSize->human()}");
+    [] !== $result || $fail('No matching shoe size found for "'.$inputSize->human().'"');
+} catch (ValueError) {
+    $fail('The input size "'.$inputSize->human().'" cannot be converted to another unit system.');
+}
 
 $cm = $result[Unit::Cm->value];
+null !== $cm || $fail('Unable to determine the foot length for "'.$inputSize->human().'"', 422);
 fwrite(STDOUT, "{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']}\n");
 fwrite(STDOUT, "{$styles['bold']}Input{$styles['reset']}\n");
 fwrite(STDOUT, "  {$styles['bold']}{$styles['cyan']}{$inputSize->unit->value} {$inputSize->value}{$styles['reset']}\n");
-fwrite(STDOUT, "{$styles['bold']}Sizes{$styles['reset']}\n");
+fwrite(STDOUT, "{$styles['bold']}Sizes ($source){$styles['reset']}\n");
 
-foreach ($result as $size) {
+foreach ($result as $unitString => $size) {
+    if (null === $size) {
+        $unit = Unit::from($unitString);
+        fwrite(STDOUT, "  {$styles['green']}{$unit->value} N/A{$styles['reset']}\n");
+        continue;
+    }
+
     fwrite(STDOUT, "  {$styles['green']}{$size->unit->value} {$size->value}{$styles['reset']}\n");
 }
 
 fwrite(STDOUT, "{$styles['bold']}Measurements{$styles['reset']}\n");
 fwrite(STDOUT, "  {$styles['green']}{$cm->value} cm{$styles['reset']}\n");
-fwrite(STDOUT, "  {$styles['green']}{$converter->inInch($cm)} in{$styles['reset']}\n");
+fwrite(STDOUT, "  {$styles['green']}{$cm->inInches()} in{$styles['reset']}\n");
 exit(0);
