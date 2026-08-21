@@ -26,13 +26,14 @@ composer require bakame/shoe-size-converter
 ## Usage
 
 ```php
-use Bakame\Shoes\ShoeSize;
 use Bakame\Shoes\Unit;
 use Bakame\Shoes\Converter;
 
 $path = __DIR__ . '/data/shoe_sizes.csv';
 $converter = Converter::fromCsv($path);
 $euShoeSize = Unit::Eu->size(39);
+// $euShoeSize is an instance of Bakame\Shoes\ShoeSize class
+
 $euShoeSize->value;
 // returs 39
 
@@ -71,8 +72,11 @@ The original script by Sarah Amft has been reimplemented using this library's AP
 in the `examples` directory. It exposes the conversion functionality as an HTTP
 API endpoint that returns JSON responses. See [converter.php](examples/converter.php).
 
-To run the converter, **clone this repo**, go to the root directory and start PHP's built-in
-development server:
+To run the converter:
+
+- **clone this repo**, 
+- go to the root directory,
+- and start PHP's built-in development server
 
 ```bash
 php -S localhost:4000
