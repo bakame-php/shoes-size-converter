@@ -2,14 +2,14 @@
 
 All Notable changes to `bakame/shoes-size-converter` will be documented in this file.
 
-## [next](https://github.com/bakame-php/shoes-size-converter/releases/tag/0.2.0) - TBD
+## [1.0.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/1.0.0) - 2026-08-22
 
 - Add support for Mondopoint
 - Add independent calculator following ISO 19407:2023-based rules
 - Update conversion table to match ISO 19407:2023
 - Split HTTP endpoint and CLI command
 
-## [0.2.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/0.2.0) - 2026-08-20
+## [0.2.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/0.2.0) - 2026-08-21
 
 - Add general support for `TabularData` interface
 - Add `ShoeException` base exception
