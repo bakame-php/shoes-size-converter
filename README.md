@@ -13,7 +13,7 @@ independent reimplementation.
 
 ## System Requirements
 
-- **PHP >= 8.2** is required but the latest stable version of PHP is recommended.
+- **PHP >= 8.4** is required but the latest stable version of PHP is recommended.
 
 ## Installation
 
@@ -35,7 +35,7 @@ $euShoeSize = Unit::Eu->size(43);
 // $euShoeSize is an instance of Bakame\Shoes\ShoeSize
 ```
 
-A `ShoeSize` exposes its numeric value and unit:
+A `AdultSize` exposes its numeric value and unit:
 
 ```php
 $euShoeSize->value;
@@ -75,7 +75,7 @@ $result = $euShoeSize->equivalents();
 
 ### Physical measurements
 
-A `ShoeSize` can also be represented as a physical foot measurement.
+A `AdultSize` can also be represented as a physical foot measurement.
 Dedicated methods are available for millimeters, centimeters, and inches:
 
 ```php
@@ -146,13 +146,15 @@ store the conversion data.
 >  **the HTTP endpoint is only available when the package has been cloned.**
 
 The original script by Sarah Amft has been reimplemented using this library's API
-in the `api` directory. It exposes the conversion functionality as an HTTP
-API endpoint that returns JSON responses. See [converter.php](api/converter.php).
+in the `public` directory. It exposes the conversion functionality as an HTTP
+API endpoint that returns:
+
+- JSON responses or an HTML page depending on your HTTP Headers. See [index.php](public/index.php).
 
 To run the converter:
 
 - **clone this repo**, 
-- go to the root directory,
+- go to the `public` directory inside the root directory,
 - and start PHP's built-in development server
 
 ```bash
@@ -162,7 +164,7 @@ php -S localhost:4000
 Then open your browser or HTTP client and request:
 
 ```text
-http://localhost:4000/api/converter.php?unit=EU&size=42.5
+http://localhost:4000/?unit=EU&size=42.5&to=uk
 ```
 
 This returns:

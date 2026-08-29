@@ -3,6 +3,7 @@
 
 use Bakame\Shoes\Converter;
 use Bakame\Shoes\Unit;
+use League\Csv\Reader;
 
 $directory = __DIR__;
 
@@ -48,6 +49,12 @@ $size = filter_var($size, FILTER_VALIDATE_FLOAT, ['options' => ['min_range' => 0
 $size !== false || $fail("Please provide a valid {$unit->value} shoe size (e.g., 38 or 42.5).");
 
 try {
+    $reader = Reader::from(__DIR__ . '/../data/shoe_sizes.csv');
+    $reader->setHeaderOffset(0);
+
+    $data = iterator_to_array($reader, false);
+
+
     $converter = Converter::fromCsv(__DIR__ . '/../data/shoe_sizes.csv');
 } catch (Throwable) {
     $fail('Data source is missing or not readable.');

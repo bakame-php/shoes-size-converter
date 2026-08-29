@@ -13,7 +13,8 @@ use function tmpfile;
 
 #[CoversClass(Converter::class)]
 #[CoversClass(Unit::class)]
-#[CoversClass(ShoeSize::class)]
+#[CoversClass(LengthUnit::class)]
+#[CoversClass(AdultSize::class)]
 final class ConverterTest extends TestCase
 {
     protected function converter(): Converter
@@ -28,7 +29,7 @@ CSV;
         $data = tmpfile();
         fwrite($data, $csv);
 
-        return Converter::fromCsv($data);
+        return Converter::fromCsv(Unit::class, $data);
     }
 
     public function testFromPath(): void
@@ -82,10 +83,7 @@ CSV;
     {
         $converter = $this->converter();
 
-        self::assertSame(
-            [],
-            $converter->equivalents(Unit::Eu->size(999))
-        );
+        self::assertNull($converter->equivalents(Unit::Eu->size(999))['eu']);
     }
 
     public function testConvertReturnsRequestedUnit(): void
@@ -139,9 +137,9 @@ CSV;
             (40, 7.5, 7, 25.3, 38, 39)
     SQL);
 
-        $shoes = Converter::fromPdo($pdo);
+        $converter = Converter::fromPdo(Unit::class, $pdo);
 
-        self::assertNotEmpty($shoes->equivalents(Unit::Eu->size(39)));
+        self::assertNotEmpty($converter->equivalents(Unit::Eu->size(39)));
     }
 
     public function test_loading_from_pdo_with_limit(): void
@@ -166,8 +164,8 @@ CSV;
             (40, 7.5, 7, 25.3, 38, 39)
     SQL);
 
-        $shoes = Converter::fromPdo($pdo, limit: 1);
+        $shoes = Converter::fromPdo(Unit::class, $pdo, limit: 1);
 
-        self::assertEmpty($shoes->equivalents(Unit::Eu->size(40)));
+        self::assertNull($shoes->equivalents(Unit::Eu->size(40))['eu']);
     }
 }

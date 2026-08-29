@@ -8,17 +8,15 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ValueError;
 
-use function json_encode;
-
 #[CoversClass(Unit::class)]
-#[CoversClass(ShoeSize::class)]
-final class ShoeSizeTest extends TestCase
+#[CoversClass(LengthUnit::class)]
+#[CoversClass(AdultSize::class)]
+final class AdultSizeTest extends TestCase
 {
     public function test_shoesize_representation(): void
     {
         $size = Unit::Cm->size(24.5);
         self::assertSame('CM 24.5', $size->human());
-        self::assertSame('{"value":24.5,"unit":"cm"}', json_encode($size));
     }
 
     public function test_shoe_size_instantiation_fails_with_negative_number(): void
@@ -30,29 +28,29 @@ final class ShoeSizeTest extends TestCase
 
     public function testInCmReturnsValueWhenAlreadyInCm(): void
     {
-        $size = new ShoeSize(24.5, Unit::Mondopoint);
+        $size = new AdultSize(24.5, Unit::Mondopoint);
 
-        self::assertSame(2.45, $size->inCentimeters());
+        self::assertSame(2.45, $size->length(LengthUnit::Centimeter));
     }
 
     public function testInCmConvertsToCm(): void
     {
-        self::assertSame(34.5, Unit::Mondopoint->size(345)->inCentimeters());
+        self::assertSame(34.5, Unit::Mondopoint->size(345)->length(LengthUnit::Centimeter));
     }
 
     public function testInCmReturnsNullWhenNoConversionExists(): void
     {
-        self::assertEquals(664.6666666666667, Unit::Eu->size(999)->inCentimeters());
+        self::assertEquals(664.6666666666667, Unit::Eu->size(999)->length(LengthUnit::Centimeter));
     }
 
     public function testInInchConvertsToInches(): void
     {
-        self::assertSame(8.46456692913386, Unit::Cm->size(21.5)->inInches());
+        self::assertSame(8.46456692913386, Unit::Cm->size(21.5)->length(LengthUnit::Inch));
     }
 
     public function testInInchReturnsNullWhenNoConversionExists(): void
     {
-        self::assertEquals(261.67979002624674, Unit::Eu->size(999)->inInches());
+        self::assertEquals(261.67979002624674, Unit::Eu->size(999)->length(LengthUnit::Inch));
     }
 
     public function test_conversion_algorithm(): void
@@ -73,7 +71,7 @@ final class ShoeSizeTest extends TestCase
     public function test_conversion_fails(): void
     {
         $shoeSize = Unit::Cm->size(10);
-        self::assertFalse($shoeSize->canConvertTo(Unit::UsWomen));
+        self::assertFalse($shoeSize->isAvailableIn(Unit::UsWomen));
 
         $res = $shoeSize->equivalents();
         self::assertNull($res[Unit::UsWomen->value]);
