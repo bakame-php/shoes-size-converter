@@ -3,85 +3,26 @@
 declare(strict_types=1);
 
 use Bakame\Shoes\AdultSize;
+use Bakame\Shoes\AdultUnit;
 use Bakame\Shoes\ChildUnit;
 use Bakame\Shoes\LengthUnit;
+use Bakame\Shoes\ShoeException;
 use Bakame\Shoes\ShoeSize;
 use Bakame\Shoes\ShoeUnit;
-use Bakame\Shoes\Unit;
 use Bakame\Shoes\UnitType;
 
 require __DIR__.'/../vendor/autoload.php';
 
-const ADULT_CONVERSION_TABLE = [
-  ['mondopoint' => 215, 'cm' => 21.5, 'eu' => 34, 'uk' => 2.5, 'us_men' => 3.5, 'us_women' => 4.5],
-  ['mondopoint' => 220, 'cm' => 22.0, 'eu' => 35, 'uk' => 3, 'us_men' => 4, 'us_women' => 5],
-  ['mondopoint' => 225, 'cm' => 22.5, 'eu' => 35.5, 'uk' => 3.5, 'us_men' => 4.5, 'us_women' => 5.5],
-  ['mondopoint' => 230, 'cm' => 23.0, 'eu' => 36.5, 'uk' => 4, 'us_men' => 5, 'us_women' => 6],
-  ['mondopoint' => 235, 'cm' => 23.5, 'eu' => 37, 'uk' => 4.5, 'us_men' => 5.5, 'us_women' => 6.5],
-  ['mondopoint' => 240, 'cm' => 24.0, 'eu' => 38, 'uk' => 5.5, 'us_men' => 6.5, 'us_women' => 7.5],
-  ['mondopoint' => 245, 'cm' => 24.5, 'eu' => 38.5, 'uk' => 6, 'us_men' => 7, 'us_women' => 8],
-  ['mondopoint' => 250, 'cm' => 25.0, 'eu' => 39.5, 'uk' => 6.5, 'us_men' => 7.5, 'us_women' => 8.5],
-  ['mondopoint' => 255, 'cm' => 25.5, 'eu' => 40, 'uk' => 7, 'us_men' => 8, 'us_women' => 9],
-  ['mondopoint' => 260, 'cm' => 26.0, 'eu' => 41, 'uk' => 7.5, 'us_men' => 8.5, 'us_women' => 9.5],
-  ['mondopoint' => 265, 'cm' => 26.5, 'eu' => 41.5, 'uk' => 8.5, 'us_men' => 9.5, 'us_women' => 10.5],
-  ['mondopoint' => 270, 'cm' => 27.0, 'eu' => 42.5, 'uk' => 9, 'us_men' => 10, 'us_women' => 11],
-  ['mondopoint' => 275, 'cm' => 27.5, 'eu' => 43, 'uk' => 9.5, 'us_men' => 10.5, 'us_women' => 11.5],
-  ['mondopoint' => 280, 'cm' => 28.0, 'eu' => 44, 'uk' => 10, 'us_men' => 11, 'us_women' => 12],
-  ['mondopoint' => 285, 'cm' => 28.5, 'eu' => 44.5, 'uk' => 10.5, 'us_men' => 11.5, 'us_women' => 12.5],
-  ['mondopoint' => 290, 'cm' => 29.0, 'eu' => 45.5, 'uk' => 11, 'us_men' => 12, 'us_women' => 13],
-  ['mondopoint' => 295, 'cm' => 29.5, 'eu' => 46, 'uk' => 12, 'us_men' => 13, 'us_women' => 14],
-  ['mondopoint' => 300, 'cm' => 30.0, 'eu' => 47, 'uk' => 12.5, 'us_men' => 13.5, 'us_women' => 14.5],
-  ['mondopoint' => 305, 'cm' => 30.5, 'eu' => 47.5, 'uk' => 13, 'us_men' => 14, 'us_women' => 15],
-  ['mondopoint' => 310, 'cm' => 31.0, 'eu' => 48.5, 'uk' => 13.5, 'us_men' => 14.5, 'us_women' => 15.5],
-  ['mondopoint' => 315, 'cm' => 31.5, 'eu' => 49, 'uk' => 14, 'us_men' => 15, 'us_women' => 16],
-  ['mondopoint' => 320, 'cm' => 32.0, 'eu' => 50, 'uk' => 15, 'us_men' => 16, 'us_women' => 17],
-];
-const CHILD_CONVERSION_TABLE = [
-    ['mondopoint' => 120, 'cm' => 12.0, 'eu' => 19.5, 'uk' => 3.5, 'us' => 4],
-    ['mondopoint' => 125, 'cm' => 12.3, 'eu' => 20, 'uk' => 4, 'us' => 4.5],
-    ['mondopoint' => null, 'cm' => 12.7, 'eu' => 20.5, 'uk' => 4.5, 'us' => 5],
-    ['mondopoint' => 130, 'cm' => 13.0, 'eu' => 21, 'uk' => 5, 'us' => 5.5],
-    ['mondopoint' => null, 'cm' => 13.3, 'eu' => 21.5, 'uk' => 5.5, 'us' => 6],
-    ['mondopoint' => 135, 'cm' => 13.5, 'eu' => 22, 'uk' => null, 'us' => null],
-    ['mondopoint' => 140, 'cm' => 13.8, 'eu' => 22.5, 'uk' => 6, 'us' => 6.5],
-    ['mondopoint' => null, 'cm' => 14.2, 'eu' => 23, 'uk' => 6.5, 'us' => 7],
-    ['mondopoint' => 145, 'cm' => 14.6, 'eu' => 23.5, 'uk' => 7, 'us' => 7.5],
-    ['mondopoint' => null, 'cm' => 14.8, 'eu' => 24, 'uk' => null, 'us' => null],
-    ['mondopoint' => 150, 'cm' => 15.0, 'eu' => 24.5, 'uk' => 7.5, 'us' => 8],
-    ['mondopoint' => 155, 'cm' => 15.4, 'eu' => 25, 'uk' => 8, 'us' => 8.5],
-    ['mondopoint' => null, 'cm' => 15.7, 'eu' => 25.5, 'uk' => 8.5, 'us' => 9],
-    ['mondopoint' => 160, 'cm' => 16.0, 'eu' => 26, 'uk' => 9, 'us' => 9.5],
-    ['mondopoint' => null, 'cm' => 16.4, 'eu' => 26.5, 'uk' => null, 'us' => null],
-    ['mondopoint' => 165, 'cm' => 16.6, 'eu' => 27, 'uk' => 9.5, 'us' => 10],
-    ['mondopoint' => 170, 'cm' => 16.9, 'eu' => 27.5, 'uk' => 10, 'us' => 10.5],
-    ['mondopoint' => null, 'cm' => 17.3, 'eu' => 28, 'uk' => 10.5, 'us' => 11],
-    ['mondopoint' => 175, 'cm' => 17.6, 'eu' => 28.5, 'uk' => 11, 'us' => 11.5],
-    ['mondopoint' => 180, 'cm' => 17.9, 'eu' => 29, 'uk' => 11.5, 'us' => 12],
-    ['mondopoint' => null, 'cm' => 18.2, 'eu' => 29.5, 'uk' => null, 'us' => null],
-    ['mondopoint' => 185, 'cm' => 18.5, 'eu' => 30, 'uk' => 12, 'us' => 12.5],
-    ['mondopoint' => null, 'cm' => 18.8, 'eu' => 30.5, 'uk' => 12.5, 'us' => 13],
-    ['mondopoint' => 190, 'cm' => 19.2, 'eu' => 31, 'uk' => 13, 'us' => 13.5],
-    ['mondopoint' => 195, 'cm' => 19.5, 'eu' => 31.5, 'uk' => 13.5, 'us' => 1],
-    ['mondopoint' => null, 'cm' => 19.8, 'eu' => 32, 'uk' => null, 'us' => null],
-    ['mondopoint' => 200, 'cm' => 20.0, 'eu' => 32.5, 'uk' => 1, 'us' => 1.5],
-    ['mondopoint' => 205, 'cm' => 20.4, 'eu' => 33, 'uk' => 1.5, 'us' => 2],
-    ['mondopoint' => null, 'cm' => 20.7, 'eu' => 33.5, 'uk' => null, 'us' => null],
-    ['mondopoint' => 210, 'cm' => 21.0, 'eu' => 34, 'uk' => 2, 'us' => 2.5],
-    ['mondopoint' => null, 'cm' => 21.3, 'eu' => 34.5, 'uk' => 2.5, 'us' => 3],
-    ['mondopoint' => 215, 'cm' => 21.7, 'eu' => 35, 'uk' => 3, 'us' => 3.5],
-    ['mondopoint' => 220, 'cm' => 22.0, 'eu' => 35.5, 'uk' => 3.5, 'us' => 4],
-    ['mondopoint' => null, 'cm' => 22.4, 'eu' => 36, 'uk' => null, 'us' => null],
-    ['mondopoint' => 225, 'cm' => 22.6, 'eu' => 36.5, 'uk' => 4, 'us' => 4.5],
-    ['mondopoint' => 230, 'cm' => 23.0, 'eu' => 37, 'uk' => 4.5, 'us' => 5],
-    ['mondopoint' => null, 'cm' => 23.2, 'eu' => 37.5, 'uk' => null, 'us' => null],
-    ['mondopoint' => 235, 'cm' => 23.6, 'eu' => 38, 'uk' => 5, 'us' => null],
-];
 const DEFAULT_LOCALE = 'en';
+
 const TRANSLATIONS = [
     'en' => [
         'name' => 'English',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'System theme',
+            'Light theme' => 'Light theme',
+            'Dark theme' => 'Dark theme',
             'Size' => 'Size',
             'Decrease shoe size' => 'Decrease shoe size',
             'Increase shoe size' => 'Increase shoe size',
@@ -104,13 +45,16 @@ const TRANSLATIONS = [
             'Size type' => 'Size Type',
             'Adults' => 'Adults',
             'Children' => 'Children',
-            'Foot length range:' => 'Foot length range:',
+            'Last length range:' => 'Last length range:',
         ],
     ],
     'fr' => [
         'name' => 'Français',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'Thème du système',
+            'Light theme' => 'Thème clair',
+            'Dark theme' => 'Thème sombre',
             'Size' => 'Pointure',
             'Decrease shoe size' => 'Diminuer la pointure',
             'Increase shoe size' => 'Augmenter la pointure',
@@ -133,13 +77,16 @@ const TRANSLATIONS = [
             'Size type' => 'Type de pointure',
             'Adults' => 'Adultes',
             'Children' => 'Enfants',
-            'Foot length range:' => 'Longueur du pied :',
+            'Last length range:' => 'Plage de longueur de la forme :',
         ],
     ],
     'es' => [
         'name' => 'Español',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'Tema del sistema',
+            'Light theme' => 'Tema claro',
+            'Dark theme' => 'Tema oscuro',
             'Size' => 'Talla',
             'Decrease shoe size' => 'Disminuir la talla',
             'Increase shoe size' => 'Aumentar la talla',
@@ -162,13 +109,16 @@ const TRANSLATIONS = [
             'Size type' => 'Tipo de talla',
             'Adults' => 'Adultos',
             'Children' => 'Niños',
-            'Foot length range:' => 'Rango de longitud del pie:',
+            'Last length range:' => 'Rango de longitud de la horma:',
         ],
     ],
     'pt' => [
         'name' => 'Português',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'Tema do sistema',
+            'Light theme' => 'Tema claro',
+            'Dark theme' => 'Tema escuro',
             'Size' => 'Tamanho do calçado',
             'Decrease shoe size' => 'Diminuir o tamanho do calçado',
             'Increase shoe size' => 'Aumentar o tamanho do calçado',
@@ -191,13 +141,16 @@ const TRANSLATIONS = [
             'Size type' => 'Tipo de tamanho',
             'Adults' => 'Adultos',
             'Children' => 'Crianças',
-            'Foot length range:' => 'Intervalo de comprimento do pé:',
+            'Last length range:' => 'Intervalo de comprimento da forma:',
         ],
     ],
     'it' => [
         'name' => 'Italiano',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'Tema di sistema',
+            'Light theme' => 'Tema chiaro',
+            'Dark theme' => 'Tema scuro',
             'Size' => 'Numero',
             'Decrease shoe size' => 'Diminuire il numero',
             'Increase shoe size' => 'Aumentare il numero',
@@ -220,13 +173,16 @@ const TRANSLATIONS = [
             'Size type' => 'Tipo di taglia',
             'Adults' => 'Adulti',
             'Children' => 'Bambini',
-            'Foot length range:' => 'Intervallo di lunghezza del piede:',
+            'Last length range:' => 'Intervallo di lunghezza della forma:',
         ],
     ],
     'nl' => [
         'name' => 'Nederlands',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'Systeemthema',
+            'Light theme' => 'Licht thema',
+            'Dark theme' => 'Donker thema',
             'Size' => 'Schoenmaat',
             'Decrease shoe size' => 'Schoenmaat verlagen',
             'Increase shoe size' => 'Schoenmaat verhogen',
@@ -249,13 +205,16 @@ const TRANSLATIONS = [
             'Size type' => 'Maattype',
             'Adults' => 'Volwassenen',
             'Children' => 'Kinderen',
-            'Foot length range:' => 'Voetlengtebereik:',
+            'Last length range:' => 'Lengtebereik van de leest:',
         ],
     ],
     'de' => [
         'name' => 'Deutsch',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'Systemdesign',
+            'Light theme' => 'Helles Design',
+            'Dark theme' => 'Dunkles Design',
             'Size' => 'Schuhgröße',
             'Decrease shoe size' => 'Schuhgröße verkleinern',
             'Increase shoe size' => 'Schuhgröße vergrößern',
@@ -278,13 +237,16 @@ const TRANSLATIONS = [
             'Size type' => 'Größentyp',
             'Adults' => 'Erwachsene',
             'Children' => 'Kinder',
-            'Foot length range:' => 'Fußlängenbereich:',
+            'Last length range:' => 'Längenbereich des Leisten:',
         ],
     ],
     'ar' => [
         'name' => 'العربية',
         'direction' => 'rtl',
         'messages' => [
+            'System theme' => 'مظهر النظام',
+            'Light theme' => 'المظهر الفاتح',
+            'Dark theme' => 'المظهر الداكن',
             'Size' => 'مقاس الحذاء',
             'Decrease shoe size' => 'خفض مقاس الحذاء',
             'Increase shoe size' => 'زيادة مقاس الحذاء',
@@ -307,13 +269,16 @@ const TRANSLATIONS = [
             'Size type' => 'نوع المقاس',
             'Adults' => 'بالغون',
             'Children' => 'أطفال',
-            'Foot length range:' => 'نطاق طول القدم:',
+            'Last length range:' => 'نطاق طول القالب:',
         ],
     ],
     'zh' => [
         'name' => '简体中文',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => '系统主题',
+            'Light theme' => '浅色主题',
+            'Dark theme' => '深色主题',
             'Size' => '鞋码',
             'Decrease shoe size' => '减小鞋码',
             'Increase shoe size' => '增大鞋码',
@@ -336,13 +301,16 @@ const TRANSLATIONS = [
             'Size type' => '尺码类型',
             'Adults' => '成人',
             'Children' => '儿童',
-            'Foot length range:' => '脚长范围：',
+            'Last length range:' => '鞋楦长度范围：',
         ],
     ],
     'ko' => [
         'name' => '한국어',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => '시스템 테마',
+            'Light theme' => '밝은 테마',
+            'Dark theme' => '어두운 테마',
             'Size' => '신발 사이즈',
             'Decrease shoe size' => '신발 사이즈 줄이기',
             'Increase shoe size' => '신발 사이즈 늘리기',
@@ -365,13 +333,16 @@ const TRANSLATIONS = [
             'Size type' => '사이즈 유형',
             'Adults' => '성인',
             'Children' => '아동',
-            'Foot length range:' => '발 길이 범위:',
+            'Last length range:' => '라스트 길이 범위:',
         ],
     ],
     'sw' => [
         'name' => 'Kiswahili',
         'direction' => 'ltr',
         'messages' => [
+            'System theme' => 'Mandhari ya mfumo',
+            'Light theme' => 'Mandhari nyepesi',
+            'Dark theme' => 'Mandhari meusi',
             'Size' => 'Ukubwa wa kiatu',
             'Decrease shoe size' => 'Punguza ukubwa wa kiatu',
             'Increase shoe size' => 'Ongeza ukubwa wa kiatu',
@@ -394,14 +365,13 @@ const TRANSLATIONS = [
             'Size type' => 'Aina ya saizi',
             'Adults' => 'Watu wazima',
             'Children' => 'Watoto',
-            'Foot length range:' => 'Masafa ya urefu wa mguu:',
+            'Last length range:' => 'Masafa ya urefu wa kalibu:',
         ],
     ],
 ];
 
-
 /**
- * @throws RuntimeException
+ * @throws RuntimeException|ShoeException
  *
  * @return array{
  *     source: string,
@@ -428,10 +398,9 @@ const TRANSLATIONS = [
 function convert(ShoeSize $shoeSize, ShoeUnit $to, UnitType $unitType): array
 {
     $shoeSize->unit::class === $to::class || throw new RuntimeException('Adult and Child shoes size can not be mixed.');
-
+    $converter = $unitType->converter();
     $source = 'ISO 19407:2023-based';
     $hasResults = static fn ($value): bool => null !== $value;
-    $converter =  $unitType->converter(Unit::class === $to::class ? ADULT_CONVERSION_TABLE : CHILD_CONVERSION_TABLE);
     $equivalents = $converter->equivalents($shoeSize);
     $results = array_filter($equivalents, $hasResults);
     if ([] === $results && $shoeSize instanceof AdultSize) {
@@ -451,22 +420,24 @@ function convert(ShoeSize $shoeSize, ShoeUnit $to, UnitType $unitType): array
         $result = ['unit' => $result->unit->value, 'value' => $result->value];
     }
 
-    $lastLengthCm = $converter->lastLength($cm, LengthUnit::Centimeter);
-    $lastLengthInches = $lastLengthCm?->in(LengthUnit::Inch);
+    $ranges = null;
+    $lastLengthCm = $converter->lastLengthRange($cm, LengthUnit::Centimeter);
+    if (null !== $lastLengthCm) {
+        $lastLengthInches = $lastLengthCm->in(LengthUnit::Inch);
+        $ranges = [
+            'centimeters' => ['min' => $lastLengthCm->min, 'max' => $lastLengthCm->max],
+            'inches' => ['min' => $lastLengthInches->min, 'max' => $lastLengthInches->max],
+        ];
+    }
 
     return [
         'source' => $source,
         'result' => $result,
         'measurements' => [
-            'centimeters' => $converter->length($cm, LengthUnit::Centimeter),
-            'inches' => $converter->length($cm, LengthUnit::Inch),
+            'centimeters' => $converter->footLength($cm, LengthUnit::Centimeter),
+            'inches' => $converter->footLength($cm, LengthUnit::Inch),
         ],
-        'ranges' => null !== $lastLengthCm && null !== $lastLengthInches
-            ? [
-                'centimeters' => ['min' => $lastLengthCm->min, 'max' => $lastLengthCm->max],
-                'inches' => ['min' => $lastLengthInches->min, 'max' => $lastLengthInches->max],
-            ]
-            : null,
+        'ranges' => $ranges,
     ];
 }
 
@@ -474,6 +445,8 @@ function convert(ShoeSize $shoeSize, ShoeUnit $to, UnitType $unitType): array
  * @param array<non-empty-string, string> $messages
  * @param non-negative-int $status
  * @param non-empty-string $locale
+ *
+ * @throws JsonException
  */
 function problem(array $messages, int $status, string $locale): never
 {
@@ -488,7 +461,7 @@ function problem(array $messages, int $status, string $locale): never
 
     http_response_code($status);
     header('Content-Type: application/problem+json; charset=UTF-8');
-    echo json_encode([
+    echo j([
         'type' => 'about:blank',
         'title' => match ($status) {
             400 => 'Bad Request',
@@ -502,7 +475,7 @@ function problem(array $messages, int $status, string $locale): never
         'detail' => $detail,
         'instance' => $_SERVER['REQUEST_URI'],
         'errors' => $errors,
-    ], JSON_UNESCAPED_SLASHES);
+    ]);
     exit;
 }
 
@@ -525,6 +498,14 @@ function t(string $key, string $locale): string
 function et(string $key, string $locale): string
 {
     return e(t($key, $locale));
+}
+
+/**
+ * @throws JsonException
+ */
+function j(mixed $value): string
+{
+    return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
 }
 
 function server(string $key, string $default = ''): string
@@ -646,12 +627,11 @@ function parseAcceptHeader(string $header): array
 }
 
 //! Script starts here
+
 $isJsonRequest = requestsJson();
 $requestedLocale = query('lang');
 $locale = resolveLocale();
-$unitType = UnitType::tryFrom(query('type')) ?? UnitType::Adult;
-$type = $unitType->value;
-
+$unitType = UnitType::tryFrom(query('type')) ?? UnitType::Adults;
 $queryString = http_build_query(array_filter([
     'type' => $unitType->value,
     'unit' => query('unit'),
@@ -676,7 +656,7 @@ if (!$isJsonRequest && '' !== $requestedLocale && $locale === $requestedLocale) 
 }
 
 if ($isJsonRequest && hasQueryValues('sizes_for')) {
-    if (UnitType::Child !== $unitType) {
+    if (UnitType::Children !== $unitType) {
         problem(['sizes_for' => 'The sizes_for parameter is only supported for Child Unit.'], 422, $locale);
     }
 
@@ -685,8 +665,8 @@ if ($isJsonRequest && hasQueryValues('sizes_for')) {
         problem(['sizes_for' => 'The unit system is not a supported child shoe sizes type.'], 400, $locale);
     }
 
-    $available_sizes = $unitType->converter(CHILD_CONVERSION_TABLE)->availableSizes($unit);
-    $sizes = array_column(iterator_to_array($available_sizes, false), 'value');
+    $availableSizes = $unitType->converter()->availableSizes($unit);
+    $sizes = array_column(iterator_to_array($availableSizes, false), 'value');
     sort($sizes, SORT_NUMERIC);
     $data = [
         'unit' => $unit->value,
@@ -696,7 +676,7 @@ if ($isJsonRequest && hasQueryValues('sizes_for')) {
 
     header('Content-Type: application/json; charset=UTF-8');
     header('Cache-Control: public, max-age=86400');
-    echo json_encode($data, JSON_UNESCAPED_SLASHES);
+    echo j($data);
     exit;
 }
 
@@ -740,44 +720,52 @@ if ($isJsonRequest) {
 
     header('Content-Type: application/json; charset=UTF-8');
     header('Cache-Control: public, max-age=86400');
-    echo json_encode($data, JSON_UNESCAPED_SLASHES);
+    echo j($data);
     exit;
 }
 
-$sizeValue = $size ?? ('child' === $type ? 23.5 : 41);
-$unitValue = $unit ?? ('child' === $type ? ChildUnit::Eu : Unit::Eu);
-$toValue = $to ?? ('child' === $type ? ChildUnit::Uk : Unit::Uk);
+$sizeValue = $size ?? 41;
+$unitValue = $unit ?? AdultUnit::Eu;
+$toValue = $to ?? AdultUnit::Uk;
+if (UnitType::Children === $unitType) {
+    $sizeValue = $size ?? 23.5;
+    $unitValue = $unit ?? ChildUnit::Eu;
+    $toValue = $to ?? ChildUnit::Uk;
+}
+
 $labels = [];
 $cases = $unitType->list();
 foreach ($cases as $case) {
     $labels[$case->value] = $case->label();
 }
 $availableSizes = null;
-if (UnitType::Child === $unitType) {
-    $availableSizes = $unitType->converter(CHILD_CONVERSION_TABLE)->availableSizes($unitValue);
+if (UnitType::Children === $unitType) {
+    $availableSizes = $unitType->converter()->availableSizes($unitValue);
+}
+
+$unitTypes = [];
+foreach (UnitType::cases() as $case) {
+    $unitTypes[$case->name] = $case->value;
 }
 ?>
 <!doctype html>
 <html lang="<?=e($locale)?>" dir="<?=e(TRANSLATIONS[$locale]['direction'])?>">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content=<?=t("Convert shoe sizes between EU, UK, US men's, US women's and Mondopoint sizes with Shoe Wizard.", $locale)?>>
     <title><?=t('Shoe Size Converter', $locale)?> – EU, UK, US &amp; Mondopoint | Shoe Wizard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="<?=et("Convert shoe sizes between EU, UK, US men's, US women's and Mondopoint sizes with Shoe Wizard.", $locale)?>">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#f3f4f6">
+    <meta name="color-scheme" content="light dark">
     <link rel="stylesheet" href="app.css">
     <script>
-        (() => {
-            const stored = localStorage.getItem('theme');
-            const dark = stored === 'dark' || (stored === null && matchMedia('(prefers-color-scheme: dark)').matches);
-            if (dark) {
-                document.documentElement.dataset.theme = 'dark';
-            }
-        })();
-        const locale = <?=json_encode($locale, JSON_UNESCAPED_SLASHES)?>;
-        const translations = <?=json_encode(TRANSLATIONS[$locale]['messages'], JSON_UNESCAPED_SLASHES)?>;
-        const unitLabels = <?=json_encode($labels, JSON_UNESCAPED_SLASHES)?>;
+        const locale = <?=j($locale)?>;
+        const translations = <?=j(TRANSLATIONS[$locale]['messages'])?>;
+        const unitLabels = <?=j($labels)?>;
+        const unitTypes = <?= j($unitTypes) ?>;
     </script>
-    <script src="app.js" type="text/javascript" defer></script>
+    <script src="app.js" defer></script>
 </head>
 <body>
 <main class="converter">
@@ -786,7 +774,7 @@ if (UnitType::Child === $unitType) {
         <nav aria-label="<?=et('Size type', $locale)?>" class="size-type-switcher">
             <ul>
 <?php foreach (UnitType::cases() as $case): ?>
-<?php if ($type === $case->value): ?>
+<?php if ($unitType === $case): ?>
                 <li><strong aria-current="page"><?=et($case->label(), $locale)?></strong></li>
 <?php else: ?>
                 <li><a href="?type=<?=e($case->value)?>"><?=et($case->label(), $locale)?></a></li>
@@ -796,7 +784,7 @@ if (UnitType::Child === $unitType) {
         </nav>
         <div class="form-field">
             <label for="size"><?=et('Size', $locale)?>: </label>
-<?php if (UnitType::Child === $unitType): ?>
+<?php if (UnitType::Children === $unitType): ?>
             <span class="input-size">
                 <select name="size" id="size" dir="ltr">
 <?php foreach ($availableSizes as $hsize): ?>
@@ -836,7 +824,7 @@ if (UnitType::Child === $unitType) {
         <div class="form-field form-actions">
             <span></span>
             <div>
-                <input type="hidden" value="<?=e($type)?>" name="type">
+                <input type="hidden" value="<?=e($unitType->value)?>" name="type">
                 <button type="submit"><?=et('Convert', $locale)?></button>
             </div>
         </div>
@@ -856,8 +844,18 @@ if (UnitType::Child === $unitType) {
     <div id="error" class="form-error" role="alert" hidden></div>
     <div id="result" class="result" aria-live="polite" role="status" hidden></div>
 </main>
-<aside>
-    <button type="button" id="theme-toggle" aria-label="<?=et('Toggle dark mode', $locale)?>">◐</button>
+<aside dir="ltr">
+    <div class="theme-switcher" role="group" aria-label="<?=et('Theme', $locale)?>">
+        <button type="button" data-theme="system" aria-label="<?=et('System theme', $locale)?>" title="<?=et('System theme', $locale)?>" aria-pressed="false">◐</button>
+        <button type="button" data-theme="light" aria-label="<?=et('Light theme', $locale)?>" title="<?=et('Light theme', $locale)?>" aria-pressed="false">☀</button>
+        <button type="button" data-theme="dark" aria-label="<?=et('Dark theme', $locale)?>" title="<?=et('Dark theme', $locale)?>" aria-pressed="false">☾</button>
+    </div>
 </aside>
+<footer dir="ltr">
+    <p>
+        Background image adapted from an photo by <a href="https://unsplash.com/@mxpissioli" target="_blank">Maria Fernanda Pissioli</a>
+        licensed under <a href="https://unsplash.com/license" target="_blank">Unsplash License</a>.
+    </p>
+</footer>
 </body>
 </html>

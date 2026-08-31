@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Shoes;
 
-enum Unit: string implements ShoeUnit
+enum AdultUnit: string implements ShoeUnit
 {
     private const int MONDOPOINT_STEP = 5;
     private const float CM_STEP = 0.1;
@@ -39,9 +39,9 @@ enum Unit: string implements ShoeUnit
     /**
      * Returns the shoe size from a foot length.
      */
-    public function fromFoot(int|float $length, LengthUnit $from): AdultSize
+    public function fromFoot(int|float $length, LengthUnit $unit): AdultSize
     {
-        return $this->size($this->fromFootLength($length, $from));
+        return $this->size($this->fromFootLength($length, $unit));
     }
 
     /**
@@ -49,7 +49,7 @@ enum Unit: string implements ShoeUnit
      */
     public function convert(AdultSize $size): AdultSize
     {
-        return $this->fromFoot($size->length(LengthUnit::Millimeter), LengthUnit::Millimeter);
+        return $this->fromFoot($size->footLength(LengthUnit::Millimeter), LengthUnit::Millimeter);
     }
 
     /**
@@ -72,15 +72,15 @@ enum Unit: string implements ShoeUnit
     /**
      * Convert a foot length into the unit shoe size value.
      */
-    private function fromFootLength(float $length, LengthUnit $from): float
+    private function fromFootLength(float $length, LengthUnit $unit): float
     {
         $length = match ($this) {
-            self::Mondopoint => $from->convert($length, LengthUnit::Millimeter),
-            self::Cm => $from->convert($length, LengthUnit::Centimeter),
-            self::Eu => $from->convert($length, LengthUnit::Millimeter) / self::EU_SCALE + self::EU_OFFSET,
-            self::Uk => $from->convert($length, LengthUnit::Inch) * self::UK_SCALE - self::UK_OFFSET,
-            self::UsMen => $from->convert($length, LengthUnit::Inch) * self::UK_SCALE - self::US_MEN_OFFSET,
-            self::UsWomen => $from->convert($length, LengthUnit::Inch) * self::UK_SCALE - self::US_WOMEN_OFFSET,
+            self::Mondopoint => $unit->convert($length, LengthUnit::Millimeter),
+            self::Cm => $unit->convert($length, LengthUnit::Centimeter),
+            self::Eu => $unit->convert($length, LengthUnit::Millimeter) / self::EU_SCALE + self::EU_OFFSET,
+            self::Uk => $unit->convert($length, LengthUnit::Inch) * self::UK_SCALE - self::UK_OFFSET,
+            self::UsMen => $unit->convert($length, LengthUnit::Inch) * self::UK_SCALE - self::US_MEN_OFFSET,
+            self::UsWomen => $unit->convert($length, LengthUnit::Inch) * self::UK_SCALE - self::US_WOMEN_OFFSET,
         };
 
         $step = match ($this) {

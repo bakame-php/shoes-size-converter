@@ -12,7 +12,7 @@ use function fwrite;
 use function tmpfile;
 
 #[CoversClass(Converter::class)]
-#[CoversClass(Unit::class)]
+#[CoversClass(AdultUnit::class)]
 #[CoversClass(LengthUnit::class)]
 #[CoversClass(AdultSize::class)]
 final class ConverterTest extends TestCase
@@ -29,90 +29,76 @@ CSV;
         $data = tmpfile();
         fwrite($data, $csv);
 
-        return Converter::fromCsv(Unit::class, $data);
+        return Converter::fromCsv($data, UnitType::Adults);
     }
 
     public function testFromPath(): void
     {
         self::assertEquals(
             [
-                'eu' => Unit::Eu->size(34),
-                'uk' => Unit::Uk->size(2.5),
-                'us_men' => Unit::UsMen->size(3.5),
-                'us_women' => Unit::UsWomen->size(4.5),
-                'cm' => Unit::Cm->size(21.5),
-                'mondopoint' => Unit::Mondopoint->size(215),
+                'eu' => AdultUnit::Eu->size(34),
+                'uk' => AdultUnit::Uk->size(2.5),
+                'us_men' => AdultUnit::UsMen->size(3.5),
+                'us_women' => AdultUnit::UsWomen->size(4.5),
+                'cm' => AdultUnit::Cm->size(21.5),
+                'mondopoint' => AdultUnit::Mondopoint->size(215),
             ],
-            $this->converter()->equivalents(Unit::Eu->size(34))
+            $this->converter()->equivalents(AdultUnit::Eu->size(34))
         );
     }
 
     public function testAvailableSizesReturnsSizesForUnit(): void
     {
-        $converter = $this->converter();
-
         self::assertEquals(
             [
-                Unit::Eu->size(34),
-                Unit::Eu->size(35),
-                Unit::Eu->size(35.5),
-                Unit::Eu->size(36.5),
+                AdultUnit::Eu->size(34),
+                AdultUnit::Eu->size(35),
+                AdultUnit::Eu->size(35.5),
+                AdultUnit::Eu->size(36.5),
             ],
-            iterator_to_array($converter->availableSizes(Unit::Eu))
+            iterator_to_array($this->converter()->availableSizes(AdultUnit::Eu))
         );
     }
 
     public function testListReturnsAllAvailableUnits(): void
     {
-        $converter = $this->converter();
-
         self::assertEquals(
             [
-                'eu' => Unit::Eu->size(34),
-                'us_men' => Unit::UsMen->size(3.5),
-                'us_women' => Unit::UsWomen->size(4.5),
-                'uk' => Unit::Uk->size(2.5),
-                'cm' => Unit::Cm->size(21.5),
-                'mondopoint' => Unit::Mondopoint->size(215),
+                'eu' => AdultUnit::Eu->size(34),
+                'us_men' => AdultUnit::UsMen->size(3.5),
+                'us_women' => AdultUnit::UsWomen->size(4.5),
+                'uk' => AdultUnit::Uk->size(2.5),
+                'cm' => AdultUnit::Cm->size(21.5),
+                'mondopoint' => AdultUnit::Mondopoint->size(215),
             ],
-            $converter->equivalents(Unit::Mondopoint->size(215))
+            $this->converter()->equivalents(AdultUnit::Mondopoint->size(215))
         );
     }
 
     public function testListReturnsEmptyArrayWhenSizeDoesNotExist(): void
     {
-        $converter = $this->converter();
-
-        self::assertNull($converter->equivalents(Unit::Eu->size(999))['eu']);
+        self::assertNull($this->converter()->equivalents(AdultUnit::Eu->size(999))['eu']);
     }
 
     public function testConvertReturnsRequestedUnit(): void
     {
-        $converter = $this->converter();
-
         self::assertEquals(
-            Unit::Cm->size(21.5),
-            $converter->inUnit(Unit::Mondopoint->size(215), Unit::Cm)
+            AdultUnit::Cm->size(21.5),
+            $this->converter()->size(AdultUnit::Mondopoint->size(215), AdultUnit::Cm)
         );
     }
 
     public function testConvertReturnsSameInstanceWhenAlreadyInRequestedUnit(): void
     {
-        $converter = $this->converter();
+        $size = AdultUnit::Cm->size(24.5);
 
-        $size = Unit::Cm->size(24.5);
-
-        self::assertEquals($size, $converter->inUnit($size, Unit::Cm));
+        self::assertEquals($size, $this->converter()->size($size, AdultUnit::Cm));
         self::assertSame('CM 24.5', $size->human());
     }
 
     public function testConvertReturnsNullWhenRequestedUnitIsUnavailable(): void
     {
-        $converter = $this->converter();
-
-        self::assertNull(
-            $converter->inUnit(Unit::Eu->size(999), Unit::Cm)
-        );
+        self::assertNull($this->converter()->size(AdultUnit::Eu->size(999), AdultUnit::Cm));
     }
 
     public function test_loading_from_pdo(): void
@@ -120,7 +106,7 @@ CSV;
         $pdo = new PDO('sqlite::memory:');
 
         $pdo->exec(<<<'SQL'
-      CREATE TABLE shoe_sizes (
+      CREATE TABLE shoe_size_adults (
           eu REAL NOT NULL,
           us_men REAL NOT NULL,
           us_women REAL NOT NULL,
@@ -131,15 +117,15 @@ CSV;
     SQL);
 
         $pdo->exec(<<<'SQL'
-        INSERT INTO shoe_sizes (eu, us_men, us_women, uk, cm, mondopoint)
+        INSERT INTO shoe_size_adults (eu, us_men, us_women, uk, cm, mondopoint)
         VALUES
             (39, 6.5, 6, 24.6, 32, 35),
             (40, 7.5, 7, 25.3, 38, 39)
     SQL);
 
-        $converter = Converter::fromPdo(Unit::class, $pdo);
+        $converter = Converter::fromPdo($pdo, UnitType::Adults);
 
-        self::assertNotEmpty($converter->equivalents(Unit::Eu->size(39)));
+        self::assertNotEmpty($converter->equivalents(AdultUnit::Eu->size(39)));
     }
 
     public function test_loading_from_pdo_with_limit(): void
@@ -147,7 +133,7 @@ CSV;
         $pdo = new PDO('sqlite::memory:');
 
         $pdo->exec(<<<'SQL'
-      CREATE TABLE shoe_sizes (
+      CREATE TABLE shoe_size_adults (
           eu REAL NOT NULL,
           us_men REAL NOT NULL,
           us_women REAL NOT NULL,
@@ -158,14 +144,14 @@ CSV;
     SQL);
 
         $pdo->exec(<<<'SQL'
-        INSERT INTO shoe_sizes (eu, us_men, us_women, uk, cm, mondopoint)
+        INSERT INTO shoe_size_adults (eu, us_men, us_women, uk, cm, mondopoint)
         VALUES
             (39, 6.5, 6, 24.6, 32, 35),
             (40, 7.5, 7, 25.3, 38, 39)
     SQL);
 
-        $shoes = Converter::fromPdo(Unit::class, $pdo, limit: 1);
+        $shoes = Converter::fromPdo($pdo, UnitType::Adults, limit: 1);
 
-        self::assertNull($shoes->equivalents(Unit::Eu->size(40))['eu']);
+        self::assertNull($shoes->equivalents(AdultUnit::Eu->size(40))['eu']);
     }
 }

@@ -29,6 +29,17 @@ enum LengthUnit: string
         return $to === $this ? $value : $to->fromMillimeters($this->toMillimeters($value));
     }
 
+    public function lastLengthRange(float $length, self $unit): LengthRange
+    {
+        $min = $unit->toMillimeters($length) * self::CHILD_TOE_ALLOWANCE;
+
+        return new LengthRange(
+            LengthUnit::Millimeter->convert($min, $this),
+            LengthUnit::Millimeter->convert($min + self::CHILD_LAST_LENGTH_RANGE, $this),
+            $this,
+        );
+    }
+
     private function toMillimeters(float $value): float
     {
         return match ($this) {
@@ -45,16 +56,5 @@ enum LengthUnit: string
             self::Centimeter => $millimeters / self::CENTIMETERS_PER_MILLIMETERS,
             self::Inch => $millimeters / self::MILLIMETERS_PER_INCH,
         };
-    }
-
-    public function lastLengthRange(float $millimeter): LengthRange
-    {
-        $min = $millimeter * self::CHILD_TOE_ALLOWANCE;
-
-        return new LengthRange(
-            LengthUnit::Millimeter->convert($min, $this),
-            LengthUnit::Millimeter->convert($min + self::CHILD_LAST_LENGTH_RANGE, $this),
-            $this,
-        );
     }
 }

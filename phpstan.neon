@@ -9,5 +9,6 @@ parameters:
     paths:
         - src
         - public
+        - bin
     parallel:
         processTimeout: 300.0

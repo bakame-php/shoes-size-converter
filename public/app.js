@@ -9,33 +9,52 @@ const increase = document.querySelector('#size-increase');
 const swapButton = document.querySelector('#swap-units');
 const fromSelect = document.querySelector('#unit');
 const toSelect = document.querySelector('#to');
-const themeButton = document.querySelector('#theme-toggle');
-
+const themeButtons = document.querySelectorAll('[data-theme]');
 const savedTheme = localStorage.getItem('theme');
 const api = window.location.pathname;
 
 const translate = (key) => translations[key] ?? key;
-const formatNumber = (value, fractionDigits) =>
-  new Intl.NumberFormat(locale, {
+const formatNumber = (value, fractionDigits) => new Intl.NumberFormat(locale, {
     numberingSystem: 'latn',
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(value);
-
 const setLocale = (locale) => {
   const params = new URLSearchParams(new FormData(form));
   params.set('lang', locale);
 
   window.location.href = `${window.location.pathname}?${params}`;
 };
+
 const setTheme = (theme) => {
-  if (theme === 'light' || theme === 'dark') {
-    document.documentElement.dataset.theme = theme;
+  if (theme === 'system') {
+    localStorage.removeItem('theme');
+    delete document.documentElement.dataset.theme;
+  } else {
     localStorage.setItem('theme', theme);
+    document.documentElement.dataset.theme = theme;
   }
+
+  updateThemeButtons(theme);
 };
+const updateThemeButtons = (theme) => {
+  themeButtons.forEach((button) => {
+    button.setAttribute(
+      'aria-pressed',
+      button.dataset.theme === theme ? 'true' : 'false'
+    );
+  });
+};
+const getStoredTheme = () => {
+  const theme = localStorage.getItem('theme');
+
+  return theme === 'light' || theme === 'dark'
+    ? theme
+    : 'system';
+};
+
 const repeatWhilePressed = (button, direction) => {
-  if (form.elements.type.value !== 'adult') {
+  if (form.elements.type.value === unitTypes.Children) {
     return;
   }
   let delayTimer;
@@ -87,6 +106,7 @@ const changeSize = (direction) => {
   size.dispatchEvent(new Event('input', {bubbles: true}));
   updateSizeButtons();
 };
+
 const clearErrors = () => {
   error.hidden = true;
   error.replaceChildren();
@@ -133,7 +153,7 @@ const showResult = (data) => {
 
     const label = document.createElement('strong');
     label.dir = 'auto';
-    label.textContent = translate('Foot length range:');
+    label.textContent = translate('Last length range:');
 
     range.append(
       label,
@@ -210,33 +230,10 @@ const convert = async () => {
     error.hidden = false;
   }
 };
-
-themeButton.addEventListener('click', () => {
-  setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
-});
-size.addEventListener('input', updateSizeButtons);
-swapButton.addEventListener('click', swapUnits);
-form.addEventListener('submit', (event) => {
-  event.preventDefault();
-  convert();
-});
-document.querySelectorAll('[data-locale]').forEach((link) => {
-  link.addEventListener('click', (event) => {
-    event.preventDefault();
-    setLocale(link.dataset.locale);
-  });
-});
-
-repeatWhilePressed(decrease, -1);
-repeatWhilePressed(increase, 1);
-updateSizeButtons();
-convert();
-setTheme(savedTheme);
-
 const sizesFor = async () => {
   const type = form.elements.type.value;
 
-  if (type !== 'child') {
+  if (type !== unitTypes.Children) {
     return;
   }
 
@@ -262,4 +259,33 @@ const sizesFor = async () => {
   );
 };
 
+size.addEventListener('input', updateSizeButtons);
+swapButton.addEventListener('click', swapUnits);
+form.addEventListener('submit', (event) => {
+  event.preventDefault();
+  convert();
+});
+document.querySelectorAll('[data-locale]').forEach((link) => {
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    setLocale(link.dataset.locale);
+  });
+});
 fromSelect.addEventListener('change', sizesFor);
+themeButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    setTheme(button.dataset.theme);
+  });
+});
+
+repeatWhilePressed(decrease, -1);
+repeatWhilePressed(increase, 1);
+updateSizeButtons();
+convert();
+setTheme(savedTheme);
+
+const theme= getStoredTheme();
+if (theme !== 'system') {
+  document.documentElement.dataset.theme = theme;
+}
+updateThemeButtons(theme);

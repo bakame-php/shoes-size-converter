@@ -1,6 +1,6 @@
 {
     "name": "bakame/shoe-size-converter",
-    "description": "shoesize converter library for PHP",
+    "description": "shoe-size converter library for PHP",
     "keywords": ["ISO", "shoes size", "converter"],
     "license": "MIT",
     "authors": [
@@ -24,17 +24,17 @@
         }
     ],
     "require": {
-        "php": "^8.4.0",
-        "league/csv": "^9.28"
+        "php": "^8.4.0"
     },
     "require-dev": {
-        "symfony/var-dumper": "^7.4 || ^8.1",
-        "phpstan/phpstan-strict-rules": "^2.0",
-        "phpstan/phpstan-phpunit": "^2.0",
-        "phpstan/phpstan": "^2.2",
-        "phpunit/phpunit": "^12.5.33 || ^13.3",
-        "phpstan/phpstan-deprecation-rules": "^2.0",
-        "friendsofphp/php-cs-fixer": "^3.95"
+        "league/csv" : "^9.28.0",
+        "symfony/var-dumper": "^8.1.6",
+        "phpstan/phpstan-strict-rules": "^2.0.12",
+        "phpstan/phpstan-phpunit": "^2.0.18",
+        "phpstan/phpstan": "^2.2.12",
+        "phpunit/phpunit": "^13.3.2",
+        "phpstan/phpstan-deprecation-rules": "^2.0.5",
+        "friendsofphp/php-cs-fixer": "^3.95.24"
     },
     "autoload": {
         "psr-4": {
@@ -63,6 +63,7 @@
         "test": "Runs full test suite"
     },
     "suggest": {
-        "ext-pdo": "Required to use the a databaseto store the data instead of CSV"
+        "ext-pdo": "Required to use a database to retrieve the conversion table data",
+        "league/csv" : "Required to use a CSV to retrieve the conversion table data"
     }
 }

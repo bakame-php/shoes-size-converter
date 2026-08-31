@@ -1,6 +1,6 @@
-# Bakame Shoes Size Converter
+# Bakame Shoe Sizes Converter
 
-This small library was prompted by the following post
+This small application was prompted by the following post
 https://phpc.social/@nando161@partyon.xyz/117123893682362282
 
 Converting shoes size is difficult, too difficult!!
@@ -15,6 +15,11 @@ independent reimplementation.
 
 - **PHP >= 8.4** is required but the latest stable version of PHP is recommended.
 
+> [!IMPORTANT]
+> If the conversion data is stored in a CSV file you will have to install **`league/csv` >= 9.28**
+>
+> If the conversion data is stored in a database, **`ext-pdo`** support is required.
+
 ## Installation
 
 **Shoe size converter** is available on [Packagist](https://packagist.org/packages/bakame/shoes-size-converter) and can be installed using [Composer](https://getcomposer.org/):
@@ -23,198 +28,32 @@ independent reimplementation.
 composer require bakame/shoe-size-converter
 ~~~
 
-## Usage
-
-Create a shoe size using one of the supported units:
-
-```php
-use Bakame\Shoes\Converter;
-use Bakame\Shoes\Unit;
-
-$euShoeSize = Unit::Eu->size(43);
-// $euShoeSize is an instance of Bakame\Shoes\ShoeSize
-```
-
-A `AdultSize` exposes its numeric value and unit:
-
-```php
-$euShoeSize->value;
-// 43
-
-$euShoeSize->unit;
-// Unit::Eu
-```
-
-### Calculated conversions
-
-You can calculate an equivalent shoe size in any supported unit using the
-foot-length-based conversion formulas:
-
-```php
-$ukShoeSize = $euShoeSize->in(Unit::Uk);
-// returns a ShoeSize containing the calculated UK size
-
-$ukShoeSize->value;
-// 9.5
-
-$ukShoeSize->unit;
-// Unit::Uk
-```
-
-The calculated value is the nearest size supported by the target sizing
-system. It is **not** a lookup in the ISO conversion table.
-
-You can also calculate all supported equivalents at once with
-`ShoeSize::equivalents()`:
-
-```php
-$result = $euShoeSize->equivalents();
-// returns an array containing the calculated equivalent shoe sizes
-// for all supported units
-```
-
-### Physical measurements
-
-A `AdultSize` can also be represented as a physical foot measurement.
-Dedicated methods are available for millimeters, centimeters, and inches:
-
-```php
-$ukShoeSize->inMillimeters();
-// 275
-
-$ukShoeSize->inCentimeters();
-// 27.5
-
-$ukShoeSize->inInches();
-// 10.826771653543
-```
-
-These measurements are derived from the calculated foot length and are
-independent of the conversion lookup table.
-
-### ISO 19407:2023-based conversions
-
-If you require an exact equivalence from the provided conversion data rather
-than a calculated value, use `Converter`.
-
-For example, when using the CSV persistence layer:
-
-```php
-$path = __DIR__ . '/data/shoe_sizes.csv';
-
-$converter = Converter::fromCsv($path);
-```
-
-`Converter::availableSizes()` returns the sizes available for a specific
-unit:
-
-```php
-$converter->availableSizes(Unit::Eu);
-// returns an iterator of ShoeSize instances
-// containing all EU sizes available in the data source
-```
-
-You can retrieve all available equivalents for a shoe size using
-`Converter::equivalents()`:
-
-```php
-$result = $converter->equivalents($euShoeSize);
-// returns the equivalent shoe sizes found in the lookup data
-```
-
-Or retrieve the equivalent for a specific unit with `Converter::inUnit()`:
-
-```php
-$ukShoeSize = $converter->inUnit($euShoeSize, Unit::Uk);
-// returns the UK equivalent found in the lookup data
-```
-
-Unlike `ShoeSize::in()` and `ShoeSize::equivalents()`, these methods **do not
-calculate missing values**. They only return equivalences that are explicitly
-present in the configured persistence layer.
-
-For example, a size may have no exact equivalent in the lookup data even
-though a calculated equivalent can be produced.
-
-Please refer to the [Persistence Layer](#persistence-layer) section for
-information about the supported persistence layers and how to create and
-store the conversion data.
-
-## HTTP Endpoint
-
-> [!WARNING]
->  **the HTTP endpoint is only available when the package has been cloned.**
+## The SPA
 
 The original script by Sarah Amft has been reimplemented using this library's API
-in the `public` directory. It exposes the conversion functionality as an HTTP
-API endpoint that returns:
+and is available in the `public` directory. It provides a small single-page application
+for converting adult and children's shoe sizes between supported shoe size systems.
 
-- JSON responses or an HTML page depending on your HTTP Headers. See [index.php](public/index.php).
+To run the converter locally:
 
-To run the converter:
-
-- **clone this repo**, 
-- go to the `public` directory inside the root directory,
-- and start PHP's built-in development server
+- Install this repo via composer,
+- Change to the `public` directory inside the root directory,
+- Start PHP's built-in development server:
 
 ```bash
 php -S localhost:4000
 ````
 
-Then open your browser or HTTP client and request:
+Then open http://localhost:4000/ in your browser.
 
-```text
-http://localhost:4000/?unit=EU&size=42.5&to=uk
-```
+The application allows you to convert both adult and children's shoe sizes.
 
-This returns:
+![adult-show-wizard.png](adult-show-wizard.png)
 
-```json
-{"source":"calculated", "sizes":[{"value":270,"unit":"mondopoint"},{"value":27,"unit":"cm"},{"value":42.5,"unit":"eu"},{"value":9,"unit":"uk"},{"value":10,"unit":"us_men"},{"value":11,"unit":"us_women"}],"measurements":{"centimeters":27,"inches":10.62992125984252}}
-```
 
-in pretty print it gives:
+## The CLI command
 
-```json
-{
-    "source": "calculated",
-    "sizes": [
-        {
-            "value": 270,
-            "unit": "mondopoint"
-        },
-        {
-            "value": 27,
-            "unit": "cm"
-        },
-        {
-            "value": 42.5,
-            "unit": "eu"
-        },
-        {
-            "value": 9,
-            "unit": "uk"
-        },
-        {
-            "value": 10,
-            "unit": "us_men"
-        },
-        {
-            "value": 11,
-            "unit": "us_women"
-        }
-    ],
-    "measurements": {
-        "centimeters": 27,
-        "inches": 10.6299212598425
-    }
-}
-```
-
-## CLI command
-
-> [!TIP]
->  **the CLI command is always available.**
+The package also provides a command-line converter:
 
 ```bash
 vendor/bin/shoe-converter EU 42.5
@@ -225,7 +64,7 @@ This returns:
 ```bash
 Shoe size conversion
 Input
-  eu 42.5
+  eu 42.5 (adults)
 Sizes (calculated)
   mondopoint 270
   cm 27
@@ -238,22 +77,199 @@ Measurements
   10.629921259843 in
 ```
 
-## Persistence Layer
+The first argument is the input shoe size unit, followed by the shoe size value. For example:
 
-The package relies on the `League\Csv\TabularData` interface for reading
-shoe-size data. You can load data from either a CSV file or a database table.
+```bash
+vendor/bin/shoe-converter EU 42.5
+vendor/bin/shoe-converter UK 9
+vendor/bin/shoe-converter US_MEN 10
+```
 
-Both sources must follow the expected shoe-size structure documented by the
-corresponding factory methods:
+You can specify the shoe size system using the `--type` or `-t` option. The
+supported values are `adults` and `children`. The `adults` system is used by
+default when no type is explicitly specified.
 
-- `fromCsv()` — loads data from a CSV file whose first row contains the
-  `eu`, `us_men`, `us_women`, `uk`, `cm` and `mondopoint` column headers.
-- `fromPdo()` — loads data from a `shoe_sizes` database table containing
-  the   `eu`, `us_men`, `us_women`, `uk`, `cm` and `mondopoint` columns.
+```bash
+vendor/bin/shoe-converter EU 7.5 --type children
+vendor/bin/shoe-converter UK 9 -t children
+vendor/bin/shoe-converter US_MEN 10 --type adults
+```
+
+| Option         | Description                              | Default  |
+| -------------- | ---------------------------------------- | -------- |
+| `--type`, `-t` | Shoe size system: `adults` or `children` | `adults` |
+
+
+## The Library
+
+Create a shoe size using one of the supported units:
+
+```php
+use Bakame\Shoes\AdultUnit;
+use Bakame\Shoes\ChildUnit;
+
+$euShoeSize = AdultUnit::Eu->size(43);
+// $euShoeSize is an instance of Bakame\Shoes\AdultSize
+$ukChildSize = ChildUnit::Uk->size(7.5);
+// $ukChildSize is an instance of Bakame\Shoes\ChildSize
+```
+
+Both instances expose their numeric value and unit:
+
+```php
+$euShoeSize->value;
+// 43
+
+$euShoeSize->unit;
+// Unit::Eu
+
+$euShoeSize->human();
+// EU 43
+```
 
 > [!IMPORTANT]
-> The conversion table in the `data` directory is provided in `CSV` and `SQLite`
-> formats and contains **adult shoe-size conversions based on ISO 19407:2023**.
+> Adult and children's shoe sizes differ in how their conversions are determined.
+> Adult shoe sizes can be converted using deterministic foot-length-based formulas,
+> whereas children's shoe sizes **MUST** use a specific conversion table.
+
+### Adult shoe size conversions
+
+#### Calculated conversions
+
+`AdultSize` supports deterministic shoe-size calculations based on foot length.
+You can calculate an equivalent shoe size in any supported adult unit using
+`AdultSize::in()`:
+
+```php
+$ukShoeSize = $euShoeSize->in(Unit::Uk);
+// returns an AdultSize containing the calculated UK size
+
+$ukShoeSize->value;
+// 9.5
+
+$ukShoeSize->unit;
+// Unit::Uk
+```
+
+The calculated value is the nearest size supported by the target sizing system.
+It is **not a lookup in the ISO conversion table**.
+
+You can also calculate all supported adult equivalents at once with
+`AdultSize::equivalents()`:
+
+```php
+$result = $euShoeSize->equivalents();
+// returns an array containing the calculated equivalent shoe sizes
+// for all supported adult units
+```
+
+These calculation methods are only available for `AdultSize`. Children's shoe
+sizes cannot be calculated using foot-length-based formulas and therefore must
+be converted using the conversion table.
+
+#### Physical measurements
+
+An `AdultSize` can also be represented as a physical foot measurement.
+Dedicated methods are available for millimeters, centimeters, and inches:
+
+```php
+use Bakame\Shoes\LengthUnit;
+
+$ukShoeSize->footLength(LengthUnit::Millimeter);
+// 275
+
+$ukShoeSize->footLength(LengthUnit::Centimeter);
+// 27.5
+
+$ukShoeSize->footLength(LengthUnit::Inch);
+// 10.826771653543
+```
+
+These measurements are calculated from the shoe size's foot length and are
+independent of the conversion lookup table.
+
+For children's shoe sizes, where a foot-length calculation cannot be used,
+`Converter::footLength()` retrieves the corresponding measurement from the
+conversion table:
+
+```php
+$length = $converter->footLength($ukChildSize, LengthUnit::Centimeter);
+// returns the length found in the conversion table
+```
+
+`Converter` can also be used for adult shoe sizes. When an adult size or
+measurement is not available in the conversion table, `Converter` falls back
+to the corresponding calculation.
+
+This means that `Converter::size()` and `Converter::footLength()` can be used
+with both adult and children's shoe sizes while preserving the appropriate
+conversion strategy for each system.
+
+### ISO 19407:2023-based conversions
+
+If you want to use the provided conversion data, use `Converter`.
+
+`Converter::size()` and `Converter::equivalents()` use the configured conversion
+table and fall back to the calculation algorithm when converting an `AdultSize`
+if the required data is not available. For `ChildSize`, the conversion table is
+the only source of conversion data.
+
+These methods can be used for both adult and children's shoe sizes, provided
+that the `Converter` is configured with the corresponding `UnitType`.
+
+For example:
+
+```php
+$ukShoeSize = $converter->size($euShoeSize, Unit::Uk);
+// returns the UK equivalent found in the conversion table
+```
+
+Or retrieve all available equivalents:
+
+```php
+$result = $converter->equivalents($euShoeSize);
+// returns the equivalent shoe sizes found in the conversion table
+```
+
+If no equivalent is present in the conversion table, `Converter` falls back to
+the calculation algorithm for `AdultSize`. For `ChildSize`, no equivalent can
+be calculated, so `null` is returned when no matching entry is found.
+
+|                            | Adult                   | Children      |
+|----------------------------|-------------------------|---------------|
+| `AdultSize::in()`          | Calculation             | Not available |
+| `AdultSize::equivalents()` | Calculation             | Not available |
+| `AdultSize::footLength()`  | Calculation             | Not available |
+| `Converter::size()`        | Table, then calculation | Table only    |
+| `Converter::equivalents()` | Table, then calculation | Table only    |
+| `Converter::footLength()`  | Table, then calculation | Table only    |
+
+## Persistence Layer
+
+The converter can be created using one of the following data sources:
+
+* a CSV file path or file stream;
+* a PDO connection; or
+* no data source, in which case the default conversion table is used.
+
+When a file path or stream is provided, it must reference a valid CSV file with
+the expected structure for the selected `UnitType`. When a PDO connection is
+provided, the database must contain the appropriate conversion table with the
+expected columns for the selected `UnitType`.
+
+The expected structure depends on the shoe size system:
+
+- **Adults** — `eu`, `us_men`, `us_women`, `uk`, `cm`, and `mondopoint`.
+- **Children** — `eu`, `us`, `uk`, `cm`, and `mondopoint`.
+
+For CSV sources, these names must be provided as the column headers in the
+first row. For PDO sources, the data must be stored in the corresponding table:
+
+- `shoe_sizes_adults` for `UnitType::Adults`.
+- `shoe_sizes_children` for `UnitType::Children`.
+
+Both tables must use the expected columns for their respective shoe size
+system.
 
 ## Attribution
 
@@ -291,3 +307,7 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 The MIT License (MIT). Please see [LICENSE](LICENSE) for more information.
 
 **Happy Coding!**
+
+```php
+
+```

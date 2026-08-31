@@ -2,6 +2,13 @@
 
 All Notable changes to `bakame/shoes-size-converter` will be documented in this file.
 
+# [2.0.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/2.0.0) - 2026-09-02
+
+- Add support for the Children shoe-size conversion
+- Add support for children shoe-size conversion in the CLI command
+- Convert the api endpoint into a full SPA
+- Rewrote the package public API to handle shoe-size conversion
+
 ## [1.0.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/1.0.0) - 2026-08-22
 
 - Add support for Mondopoint

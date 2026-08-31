@@ -10,7 +10,7 @@ final readonly class AdultSize implements ShoeSize
 {
     public function __construct(
         public float $value,
-        public Unit $unit,
+        public AdultUnit $unit,
     ) {
         $value >= 0 || throw new ValueError('The shoe size value must be greater than or equal to 0');
     }
@@ -26,12 +26,12 @@ final readonly class AdultSize implements ShoeSize
     /**
      * Returns te foot length.
      */
-    public function length(LengthUnit $unit): float
+    public function footLength(LengthUnit $in): float
     {
-        return $this->unit->toFootLength($this->value, $unit);
+        return $this->unit->toFootLength($this->value, $in);
     }
 
-    public function isAvailableIn(Unit $unit): bool
+    public function isAvailableIn(AdultUnit $unit): bool
     {
         try {
             $this->in($unit);
@@ -42,7 +42,7 @@ final readonly class AdultSize implements ShoeSize
         }
     }
 
-    public function in(Unit $unit): self
+    public function in(AdultUnit $unit): self
     {
         return $unit->convert($this);
     }
@@ -58,7 +58,7 @@ final readonly class AdultSize implements ShoeSize
     public function equivalents(): array
     {
         $result = [];
-        foreach (Unit::cases() as $unit) {
+        foreach (AdultUnit::cases() as $unit) {
             try {
                 $value = $this->in($unit);
             } catch (ValueError) {
