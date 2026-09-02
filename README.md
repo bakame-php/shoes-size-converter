@@ -36,7 +36,8 @@ for converting adult and children's shoe sizes between supported shoe size syste
 
 To run the converter locally:
 
-- Install this repo via composer,
+- Install this repo via **git clone**,
+- Run `composer install`
 - Change to the `public` directory inside the root directory,
 - Start PHP's built-in development server:
 
@@ -53,7 +54,11 @@ The application allows you to convert both adult and children's shoe sizes.
 
 ## The CLI command
 
-The package also provides a command-line converter:
+The package also provides a command-line converter.
+
+To run the CLI command locally:
+
+- Install this repo via composer
 
 ```bash
 vendor/bin/shoe-converter EU 42.5
