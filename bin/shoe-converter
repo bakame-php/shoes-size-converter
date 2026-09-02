@@ -4,7 +4,7 @@
 use Bakame\Shoes\LengthUnit;
 use Bakame\Shoes\ShoeException;
 use Bakame\Shoes\ShoeSize;
-use Bakame\Shoes\UnitType;
+use Bakame\Shoes\ShoeType;
 use Composer\InstalledVersions;
 
 $directory = __DIR__;
@@ -87,14 +87,14 @@ HELP);
  *     }
  * }
  */
-function convert(ShoeSize $shoeSize, UnitType $type): array
+function convert(ShoeSize $shoeSize, ShoeType $type): array
 {
     $converter = $type->converter();
     $source = 'ISO 19407:2023-based';
     $hasResults = static fn ($value): bool => null !== $value;
     $equivalents = $converter->equivalents($shoeSize);
     $results = array_filter($equivalents, $hasResults);
-    if ([] === $results && UnitType::Adults === $type) {
+    if ([] === $results && ShoeType::Adults === $type) {
         $source = 'calculated';
         $equivalents = $shoeSize->equivalents();
         $results = array_filter($equivalents, $hasResults);
@@ -105,7 +105,7 @@ function convert(ShoeSize $shoeSize, UnitType $type): array
 
     /** @var ShoeSize $cm */
     $cm = $equivalents['cm'];
-    if (UnitType::Children === $type) {
+    if (ShoeType::Children === $type) {
         $lastLengthCm = $converter->lastLengthRange($cm, LengthUnit::Centimeter);
         $lastLengthInches = $lastLengthCm?->in(LengthUnit::Inch);
         if ($lastLengthInches) {
@@ -144,10 +144,10 @@ if (in_array('--version', $argv, true) || in_array('-v', $argv, true)) {
     exit(0);
 }
 
-$unitType = UnitType::Adults;
+$unitType = ShoeType::Adults;
 for ($i = 3, $count = count($argv); $i < $count; $i++) {
     if ('--type' === $argv[$i] || '-t' === $argv[$i]) {
-        $unitType = UnitType::tryFrom($argv[++$i] ?? '');
+        $unitType = ShoeType::tryFrom($argv[++$i] ?? '');
         if (null === $unitType) {
             $fail("Invalid type. Expected 'adult' or 'child'.\n");
         }

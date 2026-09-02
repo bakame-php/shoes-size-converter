@@ -29,7 +29,7 @@ CSV;
         $data = tmpfile();
         fwrite($data, $csv);
 
-        return Converter::fromCsv($data, UnitType::Adults);
+        return Converter::fromCsv($data, ShoeType::Adults);
     }
 
     public function testFromPath(): void
@@ -123,7 +123,7 @@ CSV;
             (40, 7.5, 7, 25.3, 38, 39)
     SQL);
 
-        $converter = Converter::fromPdo($pdo, UnitType::Adults);
+        $converter = Converter::fromPdo($pdo, ShoeType::Adults);
 
         self::assertNotEmpty($converter->equivalents(AdultUnit::Eu->size(39)));
     }
@@ -150,7 +150,7 @@ CSV;
             (40, 7.5, 7, 25.3, 38, 39)
     SQL);
 
-        $shoes = Converter::fromPdo($pdo, UnitType::Adults, limit: 1);
+        $shoes = Converter::fromPdo($pdo, ShoeType::Adults, limit: 1);
 
         self::assertNull($shoes->equivalents(AdultUnit::Eu->size(40))['eu']);
     }

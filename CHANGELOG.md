@@ -2,7 +2,12 @@
 
 All Notable changes to `bakame/shoes-size-converter` will be documented in this file.
 
-# [2.0.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/2.0.0) - 2026-09-02
+
+## [Next](https://github.com/bakame-php/shoes-size-converter/releases/tag/3.0.0) - TBD
+
+- Renamed `UnitType` -> `ShoeType`
+
+## [2.0.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/2.0.0) - 2026-09-02
 
 - Add support for the Children shoe-size conversion
 - Add support for children shoe-size conversion in the CLI command

@@ -8,7 +8,7 @@ use PDO;
 use SplFileInfo;
 use SplFileObject;
 
-enum UnitType: string
+enum ShoeType: string
 {
     private const array CONVERSION_TABLE_ADULTS = [
         ['mondopoint' => 215, 'cm' => 21.5, 'eu' => 34, 'uk' => 2.5, 'us_men' => 3.5, 'us_women' => 4.5],

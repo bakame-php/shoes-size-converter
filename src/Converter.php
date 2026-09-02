@@ -38,7 +38,7 @@ final readonly class Converter
      *
      * @throws ShoeException If the CSV data cannot be read or contains invalid data.
      */
-    public static function fromCsv(mixed $path, UnitType $unitType): self
+    public static function fromCsv(mixed $path, ShoeType $unitType): self
     {
         $trimmer = static fn (array $row) => array_map(
             static function (mixed $value): float {
@@ -56,8 +56,8 @@ final readonly class Converter
 
             return new self(
                 match ($unitType) {
-                    UnitType::Adults => AdultUnit::class,
-                    UnitType::Children => ChildUnit::class,
+                    ShoeType::Adults => AdultUnit::class,
+                    ShoeType::Children => ChildUnit::class,
                 },
                 iterator_to_array($tabularData, false) /* @phpstan-ignore-line */
             );
@@ -99,7 +99,7 @@ final readonly class Converter
      * @throws ValueError If the limit is negative.
      * @throws ShoeException If the table cannot be read or contains invalid data.
      */
-    public static function fromPdo(PDO $connection, UnitType $unitType, int $limit = 500): self
+    public static function fromPdo(PDO $connection, ShoeType $unitType, int $limit = 500): self
     {
         0 <= $limit || throw new ValueError('The limit must be a non-negative integer.'); /* @phpstan-ignore-line */
         $limitQuery = 0 < $limit ? ' LIMIT '.$limit : '';
@@ -107,7 +107,7 @@ final readonly class Converter
         try {
             $unitClass = AdultUnit::class;
             $orderby = AdultUnit::Mondopoint->value;
-            if (UnitType::Children === $unitType) {
+            if (ShoeType::Children === $unitType) {
                 $unitClass = ChildUnit::class;
                 $orderby = ChildUnit::Mondopoint->value;
             }

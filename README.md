@@ -220,7 +220,7 @@ if the required data is not available. For `ChildSize`, the conversion table is
 the only source of conversion data.
 
 These methods can be used for both adult and children's shoe sizes, provided
-that the `Converter` is configured with the corresponding `UnitType`.
+that the `Converter` is configured with the corresponding `ShoeType`.
 
 For example:
 
@@ -258,9 +258,9 @@ The converter can be created using one of the following data sources:
 * no data source, in which case the default conversion table is used.
 
 When a file path or stream is provided, it must reference a valid CSV file with
-the expected structure for the selected `UnitType`. When a PDO connection is
+the expected structure for the selected `ShoeType`. When a PDO connection is
 provided, the database must contain the appropriate conversion table with the
-expected columns for the selected `UnitType`.
+expected columns for the selected `ShoeType`.
 
 The expected structure depends on the shoe size system:
 

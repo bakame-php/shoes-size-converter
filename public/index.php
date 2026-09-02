@@ -9,7 +9,7 @@ use Bakame\Shoes\LengthUnit;
 use Bakame\Shoes\ShoeException;
 use Bakame\Shoes\ShoeSize;
 use Bakame\Shoes\ShoeUnit;
-use Bakame\Shoes\UnitType;
+use Bakame\Shoes\ShoeType;
 
 require __DIR__.'/../vendor/autoload.php';
 
@@ -395,7 +395,7 @@ const TRANSLATIONS = [
  *     }
  * }
  */
-function convert(ShoeSize $shoeSize, ShoeUnit $to, UnitType $unitType): array
+function convert(ShoeSize $shoeSize, ShoeUnit $to, ShoeType $unitType): array
 {
     $shoeSize->unit::class === $to::class || throw new RuntimeException('Adult and Child shoes size can not be mixed.');
     $converter = $unitType->converter();
@@ -631,7 +631,7 @@ function parseAcceptHeader(string $header): array
 $isJsonRequest = requestsJson();
 $requestedLocale = query('lang');
 $locale = resolveLocale();
-$unitType = UnitType::tryFrom(query('type')) ?? UnitType::Adults;
+$unitType = ShoeType::tryFrom(query('type')) ?? ShoeType::Adults;
 $queryString = http_build_query(array_filter([
     'type' => $unitType->value,
     'unit' => query('unit'),
@@ -656,7 +656,7 @@ if (!$isJsonRequest && '' !== $requestedLocale && $locale === $requestedLocale) 
 }
 
 if ($isJsonRequest && hasQueryValues('sizes_for')) {
-    if (UnitType::Children !== $unitType) {
+    if (ShoeType::Children !== $unitType) {
         problem(['sizes_for' => 'The sizes_for parameter is only supported for Child Unit.'], 422, $locale);
     }
 
@@ -727,7 +727,7 @@ if ($isJsonRequest) {
 $sizeValue = $size ?? 41;
 $unitValue = $unit ?? AdultUnit::Eu;
 $toValue = $to ?? AdultUnit::Uk;
-if (UnitType::Children === $unitType) {
+if (ShoeType::Children === $unitType) {
     $sizeValue = $size ?? 23.5;
     $unitValue = $unit ?? ChildUnit::Eu;
     $toValue = $to ?? ChildUnit::Uk;
@@ -739,12 +739,12 @@ foreach ($cases as $case) {
     $labels[$case->value] = $case->label();
 }
 $availableSizes = null;
-if (UnitType::Children === $unitType) {
+if (ShoeType::Children === $unitType) {
     $availableSizes = $unitType->converter()->availableSizes($unitValue);
 }
 
 $unitTypes = [];
-foreach (UnitType::cases() as $case) {
+foreach (ShoeType::cases() as $case) {
     $unitTypes[$case->name] = $case->value;
 }
 ?>
@@ -773,7 +773,7 @@ foreach (UnitType::cases() as $case) {
         <h1><strong>Shoe</strong> Wizard</h1>
         <nav aria-label="<?=et('Size type', $locale)?>" class="size-type-switcher">
             <ul>
-<?php foreach (UnitType::cases() as $case): ?>
+<?php foreach (ShoeType::cases() as $case): ?>
 <?php if ($unitType === $case): ?>
                 <li><strong aria-current="page"><?=et($case->label(), $locale)?></strong></li>
 <?php else: ?>
@@ -784,7 +784,7 @@ foreach (UnitType::cases() as $case) {
         </nav>
         <div class="form-field">
             <label for="size"><?=et('Size', $locale)?>: </label>
-<?php if (UnitType::Children === $unitType): ?>
+<?php if (ShoeType::Children === $unitType): ?>
             <span class="input-size">
                 <select name="size" id="size" dir="ltr">
 <?php foreach ($availableSizes as $hsize): ?>
