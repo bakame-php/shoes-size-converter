@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Shoes;
 
+use function strtoupper;
+
 enum ChildUnit: string implements ShoeUnit
 {
     case Mondopoint = 'mondopoint';
@@ -15,16 +17,13 @@ enum ChildUnit: string implements ShoeUnit
     public function label(): string
     {
         return match ($this) {
-            self::Mondopoint => 'Mondopoint',
-            self::Cm => 'CM',
-            self::Eu => 'EU',
-            self::Uk => 'UK',
-            self::Us => 'US',
+            self::Mondopoint => $this->name,
+            default => strtoupper($this->name),
         };
     }
 
-    public function size(float|int $value): ChildSize
+    public function of(float|int $size): ChildSize
     {
-        return new ChildSize($value, $this);
+        return ChildSize::fromSize($size, $this);
     }
 }

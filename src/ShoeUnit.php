@@ -12,5 +12,5 @@ interface ShoeUnit
 
     public function label(): string;
 
-    public function size(int|float $value): ShoeSize;
+    public function of(int|float $size): ShoeSize;
 }

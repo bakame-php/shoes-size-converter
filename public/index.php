@@ -5,11 +5,12 @@ declare(strict_types=1);
 use Bakame\Shoes\AdultSize;
 use Bakame\Shoes\AdultUnit;
 use Bakame\Shoes\ChildUnit;
+use Bakame\Shoes\LengthRange;
 use Bakame\Shoes\LengthUnit;
 use Bakame\Shoes\ShoeException;
 use Bakame\Shoes\ShoeSize;
-use Bakame\Shoes\ShoeUnit;
 use Bakame\Shoes\ShoeType;
+use Bakame\Shoes\ShoeUnit;
 
 require __DIR__.'/../vendor/autoload.php';
 
@@ -383,7 +384,7 @@ const TRANSLATIONS = [
  *         centimeters: float,
  *         inches: float
  *     },
- *     ranges: ?array{
+ *     lastLengthRange: ?array{
  *         centimeters: array{
  *             min: float,
  *             max: float
@@ -417,27 +418,31 @@ function convert(ShoeSize $shoeSize, ShoeUnit $to, ShoeType $unitType): array
     /** @var ?ShoeSize $result */
     $result = $equivalents[$to->value] ?? null;
     if (null !== $result) {
-        $result = ['unit' => $result->unit->value, 'value' => $result->value];
+        $result = ['unit' => $result->unit->value, 'value' => $result->size];
     }
 
     $ranges = null;
-    $lastLengthCm = $converter->lastLengthRange($cm, LengthUnit::Centimeter);
-    if (null !== $lastLengthCm) {
-        $lastLengthInches = $lastLengthCm->in(LengthUnit::Inch);
-        $ranges = [
-            'centimeters' => ['min' => $lastLengthCm->min, 'max' => $lastLengthCm->max],
-            'inches' => ['min' => $lastLengthInches->min, 'max' => $lastLengthInches->max],
-        ];
+    $lastLengthRange = $converter->lastLengthRange($cm);
+    if ($lastLengthRange instanceof LengthRange) {
+        $range = $converter->lastLengthRange($cm);
+        if ($range instanceof LengthRange) {
+            $ranges = [
+                'centimeters' => ['min' => $range->min->in(LengthUnit::Centimeter), 'max' => $range->max->in(LengthUnit::Centimeter)],
+                'inches' => ['min' => $range->min->in(LengthUnit::Inch), 'max' => $range->max->in(LengthUnit::Inch)],
+            ];
+        }
     }
+
+    $footLength = $converter->footLength($cm);
 
     return [
         'source' => $source,
         'result' => $result,
         'measurements' => [
-            'centimeters' => $converter->footLength($cm, LengthUnit::Centimeter),
-            'inches' => $converter->footLength($cm, LengthUnit::Inch),
+            'centimeters' => $footLength->in(LengthUnit::Centimeter),
+            'inches' => $footLength->in(LengthUnit::Inch),
         ],
-        'ranges' => $ranges,
+        'lastLengthRange' => $ranges,
     ];
 }
 
@@ -666,7 +671,7 @@ if ($isJsonRequest && hasQueryValues('sizes_for')) {
     }
 
     $availableSizes = $unitType->converter()->availableSizes($unit);
-    $sizes = array_column(iterator_to_array($availableSizes, false), 'value');
+    $sizes = array_column(iterator_to_array($availableSizes, false), 'size');
     sort($sizes, SORT_NUMERIC);
     $data = [
         'unit' => $unit->value,
@@ -707,7 +712,7 @@ if (hasQueryValues('size', 'unit', 'to')) {
 if ($isJsonRequest) {
     if ($unit instanceof ShoeUnit && $to instanceof ShoeUnit && null !== $size) {
         try {
-            $data = convert($unit->size($size), $to, $unitType);
+            $data = convert($unit->of($size), $to, $unitType);
         } catch (Throwable $exception) {
             $errorMessages['convert'] = $exception->getMessage();
             $data = [];
@@ -770,7 +775,7 @@ foreach (ShoeType::cases() as $case) {
 <body>
 <main class="converter">
     <form method="GET" id="converter-form">
-        <h1><strong>Shoe</strong> Wizard</h1>
+        <h1><strong>Shoe</strong>Wizard</h1>
         <nav aria-label="<?=et('Size type', $locale)?>" class="size-type-switcher">
             <ul>
 <?php foreach (ShoeType::cases() as $case): ?>
@@ -788,7 +793,7 @@ foreach (ShoeType::cases() as $case) {
             <span class="input-size">
                 <select name="size" id="size" dir="ltr">
 <?php foreach ($availableSizes as $hsize): ?>
-                    <option value="<?=e($hsize->value)?>"<?php if ($sizeValue === $hsize->value): ?> selected<?php endif; ?>><?=e($hsize->value)?></option>
+                    <option value="<?=e($hsize->size)?>"<?php if ($sizeValue === $hsize->size): ?> selected<?php endif; ?>><?=e($hsize->size)?></option>
 <?php endforeach; ?>
                 </select>
             </span>

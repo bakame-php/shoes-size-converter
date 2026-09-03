@@ -145,8 +145,7 @@ const showResult = (data) => {
     `${formatNumber(data.measurements.inches, 2)} in`;
 
   result.append(label, value, measurements);
-
-  if (data.ranges) {
+  if (data.lastLengthRange) {
     const range = document.createElement('p');
     range.className = 'measurements';
     range.dir = 'ltr';
@@ -159,10 +158,10 @@ const showResult = (data) => {
       label,
       document.createTextNode(
         ' ' +
-        `${formatNumber(data.ranges.centimeters.min, 1)}–` +
-        `${formatNumber(data.ranges.centimeters.max, 1)} cm · ` +
-        `${formatNumber(data.ranges.inches.min, 2)}–` +
-        `${formatNumber(data.ranges.inches.max, 2)} in`,
+        `${formatNumber(data.lastLengthRange.centimeters.min, 1)}–` +
+        `${formatNumber(data.lastLengthRange.centimeters.max, 1)} cm · ` +
+        `${formatNumber(data.lastLengthRange.inches.min, 2)}–` +
+        `${formatNumber(data.lastLengthRange.inches.max, 2)} in`,
       ),
     );
 

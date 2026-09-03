@@ -8,18 +8,23 @@ use ValueError;
 
 final readonly class ChildSize implements ShoeSize
 {
-    public function __construct(
-        public float $value,
+    private function __construct(
+        public float $size,
         public ChildUnit $unit,
     ) {
-        $value >= 0 || throw new ValueError('The shoe size value must be greater than or equal to 0');
+        $size >= 0 || throw new ValueError('The shoe size value must be greater than or equal to 0');
+    }
+
+    public static function fromSize(int|float $size, ChildUnit $unit): self
+    {
+        return new self($size, $unit);
     }
 
     /**
      * @return non-empty-string
      */
-    public function human(): string
+    public function label(): string
     {
-        return $this->unit->label().' '.$this->value;
+        return $this->unit->label().' '.$this->size;
     }
 }

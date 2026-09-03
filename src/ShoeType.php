@@ -100,8 +100,8 @@ enum ShoeType: string
         }
 
         return match ($this) {
-            self::Adults => new Converter(AdultUnit::class, self::CONVERSION_TABLE_ADULTS),
-            self::Children => new Converter(ChildUnit::class, self::CONVERSION_TABLE_CHILDREN),
+            self::Adults => new Converter($this, self::CONVERSION_TABLE_ADULTS),
+            self::Children => new Converter($this, self::CONVERSION_TABLE_CHILDREN),
         };
     }
 
@@ -121,6 +121,16 @@ enum ShoeType: string
         return match ($this) {
             self::Adults => AdultUnit::cases(),
             self::Children => ChildUnit::cases(),
+        };
+    }
+
+    public function supports(ShoeUnit|ShoeSize $value): bool
+    {
+        $unit = $value instanceof ShoeSize ? $value->unit : $value;
+
+        return match ($this) {
+            self::Adults => AdultUnit::class === $unit::class,
+            self::Children => ChildUnit::class === $unit::class,
         };
     }
 }

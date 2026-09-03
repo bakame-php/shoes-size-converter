@@ -6,45 +6,32 @@ namespace Bakame\Shoes;
 
 use ValueError;
 
-final readonly class AdultSize implements ShoeSize
+final readonly class AdultSize implements ShoeSize, HasFootLength
 {
-    public function __construct(
-        public float $value,
+    private function __construct(
+        public Length $footLength,
         public AdultUnit $unit,
+        public float $size,
     ) {
-        $value >= 0 || throw new ValueError('The shoe size value must be greater than or equal to 0');
+        $size >= 0 || throw new ValueError('The shoe size value must be greater than or equal to 0');
+    }
+
+    public static function fromFootLength(Length $footLength, AdultUnit $unit): self
+    {
+        return new self($footLength, $unit, $unit->toSize($footLength));
+    }
+
+    public static function fromSize(int|float $size, AdultUnit $unit): self
+    {
+        return new self($unit->toFootLength($size), $unit, $size);
     }
 
     /**
      * @return non-empty-string
      */
-    public function human(): string
+    public function label(): string
     {
-        return $this->unit->label().' '.$this->value;
-    }
-
-    /**
-     * Returns te foot length.
-     */
-    public function footLength(LengthUnit $in): float
-    {
-        return $this->unit->toFootLength($this->value, $in);
-    }
-
-    public function isAvailableIn(AdultUnit $unit): bool
-    {
-        try {
-            $this->in($unit);
-
-            return true;
-        } catch (ValueError) {
-            return false;
-        }
-    }
-
-    public function in(AdultUnit $unit): self
-    {
-        return $unit->convert($this);
+        return $this->unit->label().' '.$this->size;
     }
 
     /**
@@ -69,5 +56,26 @@ final readonly class AdultSize implements ShoeSize
         }
 
         return $result;
+    }
+
+    public function isAvailableIn(AdultUnit $unit): bool
+    {
+        try {
+            $this->in($unit);
+
+            return true;
+        } catch (ValueError) {
+            return false;
+        }
+    }
+
+    /**
+     * Convert the shoe size between 2 shoe units.
+     */
+    public function in(AdultUnit $unit): self
+    {
+        return $unit === $this->unit
+            ? $this
+            : self::fromFootLength($this->footLength, $unit);
     }
 }

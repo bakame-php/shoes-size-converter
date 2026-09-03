@@ -1,6 +1,7 @@
 #!/usr/bin/env php
 <?php
 
+use Bakame\Shoes\LengthRange;
 use Bakame\Shoes\LengthUnit;
 use Bakame\Shoes\ShoeException;
 use Bakame\Shoes\ShoeSize;
@@ -32,20 +33,19 @@ $styles = [
     'reset'  => "\033[0m",
 ];
 
-$fail = static function (string $message) use ($styles): never {
-    fwrite(
-        STDERR,
-        "{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']}\n"
-        . "{$styles['bold']}{$styles['red']}{$message}{$styles['reset']}\n"
-    );
+$version = InstalledVersions::getPrettyVersion('bakame/shoe-size-converter') ?? 'unknown';
+$title = "{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']} $version\n";
 
+
+$fail = static function (string $message) use ($styles, $title): never {
+    fwrite(STDERR, $title . "{$styles['bold']}{$styles['red']}{$message}{$styles['reset']}\n");
     exit(1);
 };
 
-$help = static function () use ($styles): never {
-    fwrite(STDOUT, <<<HELP
-{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']}
 
+$help = static function () use ($styles, $title): never {
+    fwrite(STDOUT, <<<HELP
+{$title}
 Convert shoe sizes between supported unit systems.
 
 {$styles['bold']}Usage:{$styles['reset']}
@@ -75,7 +75,7 @@ HELP);
  *         centimeters: float,
  *         inches: float
  *     },
- *     ranges: ?array{
+ *     lastLengthRange: ?array{
  *         centimeters: array{
  *             min: float,
  *             max: float
@@ -106,24 +106,25 @@ function convert(ShoeSize $shoeSize, ShoeType $type): array
     /** @var ShoeSize $cm */
     $cm = $equivalents['cm'];
     if (ShoeType::Children === $type) {
-        $lastLengthCm = $converter->lastLengthRange($cm, LengthUnit::Centimeter);
-        $lastLengthInches = $lastLengthCm?->in(LengthUnit::Inch);
-        if ($lastLengthInches) {
+        $range = $converter->lastLengthRange($cm);
+        if ($range instanceof LengthRange) {
             $ranges = [
-                'centimeters' => ['min' => $lastLengthCm->min, 'max' => $lastLengthCm->max],
-                'inches' => ['min' => $lastLengthInches->min, 'max' => $lastLengthInches->max],
+                'centimeters' => ['min' => $range->min->in(LengthUnit::Centimeter), 'max' => $range->max->in(LengthUnit::Centimeter)],
+                'inches' => ['min' => $range->min->in(LengthUnit::Inch), 'max' => $range->max->in(LengthUnit::Inch)],
             ];
         }
     }
+
+    $footLength = $converter->footLength($cm);
 
     return [
         'source' => $source,
         'results' => $equivalents,
         'measurements' => [
-            'centimeters' => $converter->footLength($cm, LengthUnit::Centimeter),
-            'inches' => $converter->footLength($cm, LengthUnit::Inch),
+            'centimeters' => $footLength->in(LengthUnit::Centimeter),
+            'inches' => $footLength->in( LengthUnit::Inch),
         ],
-        'ranges' => $ranges,
+        'lastLengthRange' => $ranges,
     ];
 }
 
@@ -139,16 +140,15 @@ if (in_array('--help', $argv, true) || in_array('-h', $argv, true)) {
 }
 
 if (in_array('--version', $argv, true) || in_array('-v', $argv, true)) {
-    $version = InstalledVersions::getPrettyVersion('bakame/shoe-size-converter') ?? 'unknown';
-    fwrite(STDOUT, "{$styles['bold']}Shoe size conversion{$styles['reset']} {$version}\n");
+    fwrite(STDOUT, $title);
     exit(0);
 }
 
-$unitType = ShoeType::Adults;
+$shoeType = ShoeType::Adults;
 for ($i = 3, $count = count($argv); $i < $count; $i++) {
     if ('--type' === $argv[$i] || '-t' === $argv[$i]) {
-        $unitType = ShoeType::tryFrom($argv[++$i] ?? '');
-        if (null === $unitType) {
+        $shoeType = ShoeType::tryFrom($argv[++$i] ?? '');
+        if (null === $shoeType) {
             $fail("Invalid type. Expected 'adult' or 'child'.\n");
         }
 
@@ -157,35 +157,34 @@ for ($i = 3, $count = count($argv); $i < $count; $i++) {
 }
 
 try {
-    $unit = $unitType->unit(strtolower(strtolower($argv[1] ?? ''))) ?? $fail('Please provide a valid shoe-size unit for .' . $unitType->value);
+    $unit = $shoeType->unit(strtolower($argv[1] ?? '')) ?? $fail('Please provide a valid shoe-size unit for ' . $shoeType->value ."; received " . $argv[1] ?? 'N/A');
     $size = trim($argv[2] ?? '');
     $size !== '' || $fail('Please provide a shoe size.');
     $size = filter_var($size, FILTER_VALIDATE_FLOAT, ['options' => ['min_range' => 0]]);
     $size !== false || $fail("Please provide a valid {$unit->value} shoe size (e.g., 38 or 42.5).");
 
-    $inputSize = $unit->size($size);
-    $result = convert($inputSize, $unitType);
+    $inputSize = $unit->of($size);
+    $result = convert($inputSize, $shoeType);
     $cm = $result['results']['cm'];
     $source = $result['source'];
-    $lastRanges = $result['ranges'] ?? [];
+    $lastRanges = $result['lastLengthRange'] ?? [];
     $measurements = $result['measurements'];
-} catch (Throwable) {
-    $fail('The input size "'.$inputSize->human().'" cannot be converted to another unit system.');
+} catch (Throwable $e) {
+    $fail('Size "'.$inputSize->label().'" cannot be converted to another ' . $shoeType->value .' unit system; ' . $e->getMessage());
 }
 
-fwrite(STDOUT, "{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']}\n");
+fwrite(STDOUT, "{$styles['bold']}{$styles['yellow']}Shoe size conversion{$styles['reset']} {$version}\n");
 fwrite(STDOUT, "{$styles['bold']}Input{$styles['reset']}\n");
-fwrite(STDOUT, "  {$styles['bold']}{$styles['cyan']}{$inputSize->human()} ({$unitType->label()}){$styles['reset']}\n");
+fwrite(STDOUT, "  {$styles['bold']}{$styles['cyan']}{$inputSize->label()} ({$shoeType->label()}){$styles['reset']}\n");
 fwrite(STDOUT, "{$styles['bold']}Sizes ($source){$styles['reset']}\n");
 
 foreach ($result['results'] as $unitString => $size) {
     if (null === $size) {
-        $unit = $unitType->unit($unitString);
-        fwrite(STDOUT, "  {$styles['green']}{$unit->value} N/A{$styles['reset']}\n");
+        fwrite(STDOUT, "  {$styles['green']}{$shoeType->unit($unitString)->label()} N/A{$styles['reset']}\n");
         continue;
     }
 
-    fwrite(STDOUT, "  {$styles['green']}{$size->unit->value} {$size->value}{$styles['reset']}\n");
+    fwrite(STDOUT, "  {$styles['green']}{$size->label()}{$styles['reset']}\n");
 }
 
 fwrite(STDOUT, "{$styles['bold']}Measurements{$styles['reset']}\n");
@@ -193,7 +192,7 @@ fwrite(STDOUT, "  {$styles['green']}".f($measurements['centimeters'])." cm{$styl
 fwrite(STDOUT, "  {$styles['green']}".f($measurements['inches'])." in{$styles['reset']}\n");
 if ([] !== $lastRanges) {
     fwrite(STDOUT, "{$styles['bold']}Last length range:{$styles['reset']}\n");
-    fwrite(STDOUT, "  {$styles['green']} ".f($lastRanges['centimeters']['min'])." - {$styles['green']}".f($lastRanges['centimeters']['max'])." cm{$styles['reset']}\n");
-    fwrite(STDOUT, "  {$styles['green']} ".f($lastRanges['inches']['min'])." - {$styles['green']}".f($lastRanges['inches']['max'])." in{$styles['reset']}\n");
+    fwrite(STDOUT, " {$styles['green']} ".f($lastRanges['centimeters']['min'])." - {$styles['green']}".f($lastRanges['centimeters']['max'])." cm{$styles['reset']}\n");
+    fwrite(STDOUT, " {$styles['green']} ".f($lastRanges['inches']['min'])." - {$styles['green']}".f($lastRanges['inches']['max'])." in{$styles['reset']}\n");
 }
 exit(0);

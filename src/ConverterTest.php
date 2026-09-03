@@ -12,12 +12,16 @@ use function fwrite;
 use function tmpfile;
 
 #[CoversClass(Converter::class)]
-#[CoversClass(AdultUnit::class)]
-#[CoversClass(LengthUnit::class)]
+#[CoversClass(ChildSize::class)]
+#[CoversClass(ChildUnit::class)]
 #[CoversClass(AdultSize::class)]
+#[CoversClass(AdultUnit::class)]
+#[CoversClass(Length::class)]
+#[CoversClass(LengthUnit::class)]
+#[CoversClass(LengthRange::class)]
 final class ConverterTest extends TestCase
 {
-    protected function converter(): Converter
+    protected function adultConverter(): Converter
     {
         $csv = <<<CSV
 mondopoint,cm,eu,uk,us_men,us_women
@@ -32,18 +36,34 @@ CSV;
         return Converter::fromCsv($data, ShoeType::Adults);
     }
 
+    private function childConverter(): Converter
+    {
+        $csv = <<<CSV
+eu,uk,us,cm
+20,4,5,12.0
+21,5,6,12.5
+22,6,7,13.0
+23,7,8,13.5
+CSV;
+
+        $data = tmpfile();
+        fwrite($data, $csv);
+
+        return Converter::fromCsv($data, ShoeType::Children);
+    }
+
     public function testFromPath(): void
     {
         self::assertEquals(
             [
-                'eu' => AdultUnit::Eu->size(34),
-                'uk' => AdultUnit::Uk->size(2.5),
-                'us_men' => AdultUnit::UsMen->size(3.5),
-                'us_women' => AdultUnit::UsWomen->size(4.5),
-                'cm' => AdultUnit::Cm->size(21.5),
-                'mondopoint' => AdultUnit::Mondopoint->size(215),
+                'eu' => AdultUnit::Eu->of(34),
+                'uk' => AdultUnit::Uk->of(2.5),
+                'us_men' => AdultUnit::UsMen->of(3.5),
+                'us_women' => AdultUnit::UsWomen->of(4.5),
+                'cm' => AdultUnit::Cm->of(21.5),
+                'mondopoint' => AdultUnit::Mondopoint->of(215),
             ],
-            $this->converter()->equivalents(AdultUnit::Eu->size(34))
+            $this->adultConverter()->equivalents(AdultUnit::Eu->of(34))
         );
     }
 
@@ -51,12 +71,12 @@ CSV;
     {
         self::assertEquals(
             [
-                AdultUnit::Eu->size(34),
-                AdultUnit::Eu->size(35),
-                AdultUnit::Eu->size(35.5),
-                AdultUnit::Eu->size(36.5),
+                AdultUnit::Eu->of(34),
+                AdultUnit::Eu->of(35),
+                AdultUnit::Eu->of(35.5),
+                AdultUnit::Eu->of(36.5),
             ],
-            iterator_to_array($this->converter()->availableSizes(AdultUnit::Eu))
+            iterator_to_array($this->adultConverter()->availableSizes(AdultUnit::Eu))
         );
     }
 
@@ -64,41 +84,41 @@ CSV;
     {
         self::assertEquals(
             [
-                'eu' => AdultUnit::Eu->size(34),
-                'us_men' => AdultUnit::UsMen->size(3.5),
-                'us_women' => AdultUnit::UsWomen->size(4.5),
-                'uk' => AdultUnit::Uk->size(2.5),
-                'cm' => AdultUnit::Cm->size(21.5),
-                'mondopoint' => AdultUnit::Mondopoint->size(215),
+                'eu' => AdultUnit::Eu->of(34),
+                'us_men' => AdultUnit::UsMen->of(3.5),
+                'us_women' => AdultUnit::UsWomen->of(4.5),
+                'uk' => AdultUnit::Uk->of(2.5),
+                'cm' => AdultUnit::Cm->of(21.5),
+                'mondopoint' => AdultUnit::Mondopoint->of(215),
             ],
-            $this->converter()->equivalents(AdultUnit::Mondopoint->size(215))
+            $this->adultConverter()->equivalents(AdultUnit::Mondopoint->of(215))
         );
     }
 
     public function testListReturnsEmptyArrayWhenSizeDoesNotExist(): void
     {
-        self::assertNull($this->converter()->equivalents(AdultUnit::Eu->size(999))['eu']);
+        self::assertNull($this->adultConverter()->equivalents(AdultUnit::Eu->of(999))['eu']);
     }
 
     public function testConvertReturnsRequestedUnit(): void
     {
         self::assertEquals(
-            AdultUnit::Cm->size(21.5),
-            $this->converter()->size(AdultUnit::Mondopoint->size(215), AdultUnit::Cm)
+            AdultUnit::Cm->of(21.5),
+            $this->adultConverter()->size(AdultUnit::Mondopoint->of(215), AdultUnit::Cm)
         );
     }
 
     public function testConvertReturnsSameInstanceWhenAlreadyInRequestedUnit(): void
     {
-        $size = AdultUnit::Cm->size(24.5);
+        $size = AdultUnit::Cm->of(24.5);
 
-        self::assertEquals($size, $this->converter()->size($size, AdultUnit::Cm));
-        self::assertSame('CM 24.5', $size->human());
+        self::assertEquals($size, $this->adultConverter()->size($size, AdultUnit::Cm));
+        self::assertSame('CM 24.5', $size->label());
     }
 
     public function testConvertReturnsNullWhenRequestedUnitIsUnavailable(): void
     {
-        self::assertNull($this->converter()->size(AdultUnit::Eu->size(999), AdultUnit::Cm));
+        self::assertNull($this->adultConverter()->size(AdultUnit::Eu->of(999), AdultUnit::Cm));
     }
 
     public function test_loading_from_pdo(): void
@@ -125,7 +145,7 @@ CSV;
 
         $converter = Converter::fromPdo($pdo, ShoeType::Adults);
 
-        self::assertNotEmpty($converter->equivalents(AdultUnit::Eu->size(39)));
+        self::assertNotEmpty($converter->equivalents(AdultUnit::Eu->of(39)));
     }
 
     public function test_loading_from_pdo_with_limit(): void
@@ -152,6 +172,20 @@ CSV;
 
         $shoes = Converter::fromPdo($pdo, ShoeType::Adults, limit: 1);
 
-        self::assertNull($shoes->equivalents(AdultUnit::Eu->size(40))['eu']);
+        self::assertNull($shoes->equivalents(AdultUnit::Eu->of(40))['eu']);
+    }
+
+    public function testLastLengthRangeReturnsRangeForChildSize(): void
+    {
+        $range = $this->childConverter()->lastLengthRange(ChildUnit::Eu->of(20));
+        self::assertNotNull($range);
+        [$min, $max] = $range;
+        self::assertEquals($min->millimeters, 130);
+        self::assertEquals($max->millimeters, 136);
+    }
+
+    public function testLastLengthRangeReturnsNullWhenUnavailable(): void
+    {
+        self::assertNull($this->childConverter()->lastLengthRange(ChildUnit::Eu->of(999)));
     }
 }

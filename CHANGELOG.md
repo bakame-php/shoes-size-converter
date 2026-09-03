@@ -6,6 +6,8 @@ All Notable changes to `bakame/shoes-size-converter` will be documented in this 
 ## [Next](https://github.com/bakame-php/shoes-size-converter/releases/tag/3.0.0) - TBD
 
 - Renamed `UnitType` -> `ShoeType`
+- Introducing a `Length` Value object
+- `AdultSize::footLength` public readonly property added
 
 ## [2.0.0](https://github.com/bakame-php/shoes-size-converter/releases/tag/2.0.0) - 2026-09-02
 

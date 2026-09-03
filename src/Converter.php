@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bakame\Shoes;
 
-use BackedEnum;
 use League\Csv\Exception;
 use League\Csv\Reader;
 use PDO;
@@ -24,6 +23,9 @@ use function trim;
 
 final readonly class Converter
 {
+    private const float CHILD_TOE_ALLOWANCE = 1.08;
+    private const int CHILD_LAST_LENGTH_RANGE = 6;
+
     /**
      * Creates a shoe-size converter from CSV data.
      *
@@ -38,7 +40,7 @@ final readonly class Converter
      *
      * @throws ShoeException If the CSV data cannot be read or contains invalid data.
      */
-    public static function fromCsv(mixed $path, ShoeType $unitType): self
+    public static function fromCsv(mixed $path, ShoeType $shoeType): self
     {
         $trimmer = static fn (array $row) => array_map(
             static function (mixed $value): float {
@@ -55,10 +57,7 @@ final readonly class Converter
                 ->setEscape('');
 
             return new self(
-                match ($unitType) {
-                    ShoeType::Adults => AdultUnit::class,
-                    ShoeType::Children => ChildUnit::class,
-                },
+                $shoeType,
                 iterator_to_array($tabularData, false) /* @phpstan-ignore-line */
             );
         } catch (Exception $exception) {
@@ -119,23 +118,17 @@ final readonly class Converter
             /** @param list<array{non-empty-string, int|float}> $data */
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            return new self($unitClass, $data); /* @phpstan-ignore-line */
+            return new self($unitType, $data); /* @phpstan-ignore-line */
         } catch (PDOException $exception) {
             throw new ShoeException('Unable to read tabular data.', previous: $exception);
         }
     }
 
     /**
-     * @param class-string<BackedEnum&ShoeUnit> $unitClass
      * @param list<array<non-empty-string, int|float|null>> $tabularData
-     *
-     * @throws ShoeException
      */
-    public function __construct(private string $unitClass, private array $tabularData)
+    public function __construct(private ShoeType $shoeType, private array $tabularData)
     {
-        AdultUnit::class === $this->unitClass
-        || ChildUnit::class === $this->unitClass
-        || throw new ShoeException('The class "'.$this->unitClass.'" is not supported.');
     }
 
     /**
@@ -151,7 +144,7 @@ final readonly class Converter
             /** @var int|float|null $value */
             foreach (array_column($this->tabularData, $for->value) as $value) {
                 if (null !== $value) {
-                    yield $for->size($value);
+                    yield $for->of($value);
                 }
             }
         } catch (Throwable $exception) {
@@ -180,13 +173,7 @@ final readonly class Converter
 
     public function supports(ShoeUnit|ShoeSize $value): bool
     {
-        try {
-            $this->assertSupports($value);
-
-            return true;
-        } catch (Throwable) {
-            return false;
-        }
+        return $this->shoeType->supports($value);
     }
 
     /**
@@ -206,14 +193,14 @@ final readonly class Converter
         }
 
         foreach ($this->tabularData as $arr) {
-            if ($arr[$shoe->unit->value] !== $shoe->value) {
+            if ($arr[$shoe->unit->value] !== $shoe->size) {
                 continue;
             }
 
             foreach ($shoe->unit::cases() as $unit) {
                 $key = $unit->value;
                 if (array_key_exists($key, $arr) && null !== $arr[$key]) {
-                    $equivalents[$key] = $unit->size($arr[$key]);
+                    $equivalents[$key] = $unit->of($arr[$key]);
                 }
             }
 
@@ -224,23 +211,34 @@ final readonly class Converter
     }
 
     /**
-     * @throws ShoeException
+     * Returns the last length range if the converter can determine one.
      */
-    public function lastLengthRange(ShoeSize $shoe, LengthUnit $in): ?LengthRange
+    public function lastLengthRange(ShoeSize $shoe): ?LengthRange
     {
-        return $shoe instanceof ChildSize
-            ? $in->lastLengthRange($this->footLength($shoe, LengthUnit::Millimeter), LengthUnit::Millimeter)
-            : null;
+        if (!$shoe instanceof ChildSize) {
+            return null;
+        }
+
+        try {
+            $length = $this->footLength($shoe);
+        } catch (ShoeException) {
+            return null;
+        }
+
+        $min = $length->millimeters * self::CHILD_TOE_ALLOWANCE;
+        $max = $min + self::CHILD_LAST_LENGTH_RANGE;
+
+        return new LengthRange(Length::fromMillimeters($min), Length::fromMillimeters($max));
     }
 
     /**
      * @throws ShoeException
      */
-    public function footLength(ShoeSize $shoe, LengthUnit $in): float
+    public function footLength(ShoeSize $shoe): Length
     {
         $this->assertSupports($shoe);
 
-        return $shoe instanceof AdultSize ? $shoe->footLength($in) : $this->childFootLength($shoe, $in);
+        return $shoe instanceof AdultSize ? $shoe->footLength : $this->childFootLength($shoe);
     }
 
     /**
@@ -248,26 +246,21 @@ final readonly class Converter
      */
     private function assertSupports(ShoeUnit|ShoeSize $value): void
     {
-        $unit = $value instanceof ShoeSize
-            ? $value->unit
-            : $value;
-
-        $unit::class === $this->unitClass || throw new ShoeException('The converter table supports '.$this->unitClass.', not '.$unit::class.'.');
+        $this->shoeType->supports($value) || throw new ShoeException('The converter table supports '.$this->shoeType->label());
     }
 
-    private function childFootLength(ShoeSize $shoe, LengthUnit $in): float
+    private function childFootLength(ShoeSize $shoe): Length
     {
         try {
             $shoeSize = $this->size($shoe, ChildUnit::Mondopoint);
             if (null !== $shoeSize) {
-                return LengthUnit::Millimeter->convert($shoeSize->value, $in);
+                return Length::fromMillimeters($shoeSize->size);
             }
 
             $shoeSize = $this->size($shoe, ChildUnit::Cm);
             null !== $shoeSize || throw new ShoeException('Unable to determine the child shoe length.');
 
-            return LengthUnit::Centimeter->convert($shoeSize->value, $in);
-
+            return Length::fromCentimeters($shoeSize->size);
         } catch (ShoeException $exception) {
             throw $exception;
         } catch (Throwable $exception) {

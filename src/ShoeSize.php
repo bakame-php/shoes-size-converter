@@ -8,7 +8,7 @@ use BackedEnum;
 
 interface ShoeSize
 {
-    public int|float $value {
+    public int|float $size {
         get;
     }
 
@@ -19,5 +19,5 @@ interface ShoeSize
     /**
      * @return non-empty-string
      */
-    public function human(): string;
+    public function label(): string;
 }
